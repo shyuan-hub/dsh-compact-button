@@ -1,0 +1,18 @@
+# dsh-compact-button bundle patch
+#
+# This file is the `dsh.bundle.patch` layer of the package: when the plugin is
+# installed into a profile (dsh plugin --profile <name> add dsh-compact-button,
+# or a manual `file:` dependency plus a `dsh.profile.bundles` entry), the
+# profile boot merges THIS patch — a single `insert` of the plugin row — so
+# the Node half and the client bundle mount without manual cordis.patch.yml
+# edits.
+#
+# The `!!js` disabled expression backs THIS row off when another *enabled*
+# entry already mounts `dsh-compact-button`, so an aggregate bundle that
+# re-ships this plugin cannot double-mount it (duplicate client slot
+# registration would fail at boot). The loader evaluates the expression when
+# this row is processed (entry-list order, only earlier rows are visible).
+- insert:
+    - id: compact-button
+      name: 'dsh-compact-button'
+      disabled: !!js "[...ctx.loader.entries()].some((e) => e.options.name === 'dsh-compact-button' && e.options.id !== 'compact-button' && !e.disabled)"
