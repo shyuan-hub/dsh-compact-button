@@ -1,0 +1,8 @@
+.button{width:100%;gap:6px;padding:6px 10px;font-size:12px;font-weight:500;line-height:18px;color:var(--dsw-alias-label-secondary);background:0 0;border:1px solid var(--dsw-alias-border-l2);border-radius:8px;cursor:pointer;align-items:center;justify-content:center;display:inline-flex;transition:background .12s,color .12s}
+.button:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}
+.button:disabled{cursor:default}
+.buttonIcon{flex:none;display:inline-flex}
+.buttonIcon svg{width:14px;height:14px}
+.buttonPending{color:var(--dsw-alias-label-tertiary)}
+.buttonSubmitted{border-color:var(--dsw-alias-state-business-tertiary);color:var(--dsw-alias-state-business-primary)}
+.buttonFailed{border-color:var(--dsw-alias-state-error-secondary);color:var(--dsw-alias-state-error-primary)}

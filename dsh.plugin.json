@@ -1,0 +1,12 @@
+{
+  "id": "dsh-external/dsh-compact-button",
+  "version": "0.1.0",
+  "main": "./lib/index.js",
+  "description": "在对话上下文计量面板中增加一键压缩按钮，点击提交 /compact 将较早的对话历史压缩为摘要",
+  "engines": {
+    "dsh": ">=0.0.1"
+  },
+  "client": {
+    "main": "./lib/client-registry.js"
+  }
+}
