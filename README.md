@@ -49,11 +49,11 @@ pnpm pack                                # 生成 dsh-compact-button-0.1.0.tgz
 dsh plugin --profile web add "file:<你的本地目录>/dsh-compact-button-0.1.0.tgz"
 ```
 
-装完**硬刷新浏览器**（Cmd/Ctrl+Shift+R）即可（本插件只有 client 半边，无需重启 `dsh web`）。
+装完**重启 `dsh web`**，再硬刷新浏览器（Cmd/Ctrl+Shift+R）即可生效。
 
 > ✅ 无需手动编辑 profile 的 `package.json`：本包声明了 `dsh.bundle.patch`，`dsh plugin add` 安装后会自动把它追加进 `dsh.profile.bundles`。
 >
-> 🔧 调试本地改动时，可改用 link 通道：`dsh plugin --profile web add "link:<克隆目录绝对路径>"`，之后每次 `pnpm build` + 硬刷新即可生效。
+> 🔧 调试本地改动时，可改用 link 通道：`dsh plugin --profile web add "link:<克隆目录绝对路径>"`，之后每次 `pnpm build` + 重启 `dsh web` 即可生效。
 
 > 📦 插件自带 bundle patch（[`cordis.patch.yml`](./cordis.patch.yml)）：装入 profile 后，启动时会由它自动插入本插件的挂载条目，无需手动编辑 profile 的 `cordis.patch.yml`；若聚合包已挂载本插件，该条目会自动退让，避免重复挂载。
 
@@ -64,7 +64,7 @@ dsh plugin --profile web add "file:<你的本地目录>/dsh-compact-button-0.1.0
 |---|---|
 | 面板里**看不到按钮** | 上下文计量面板必须声明 `conversation.context.actions` 子槽位（见下方「平台补丁」）。确认补丁已应用后硬刷新。 |
 | 点击后显示「命令未匹配」 | 当前 composer 没有可提交命令的会话。切换到有活跃会话的页面再试。 |
-| 改动后没生效 | 本插件只有 client 半边，硬刷新浏览器（Cmd/Ctrl+Shift+R）即可，无需重启 `dsh web`。 |
+| 安装 / 改动后没生效 | 本插件需要**重启 `dsh web`** 才能生效（仅硬刷新浏览器不够），重启后再硬刷新页面。 |
 
 </details>
 
