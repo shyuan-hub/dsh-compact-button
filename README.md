@@ -3,9 +3,10 @@
 <!-- Hero -->
 <div align="center">
   <b style="font-size: 1.15em;">上下文快满了？点一下，把早期对话压缩成摘要</b><br /><br />
+  <a href="https://www.npmjs.com/package/dsh-compact-button"><img alt="npm version" src="https://img.shields.io/npm/v/dsh-compact-button" /></a>
   <a href="https://github.com/shyuan-hub/dsh-compact-button/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/shyuan-hub/dsh-compact-button" /></a>
   <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg" /></a>
-  <a href="https://www.npmjs.com/package/@deepseek-ai/dsh?activeTab=versions"><img alt="适配 DSH 版本：0.1.1-rc.1" src="https://img.shields.io/badge/DSH-0.1.1--rc.1-4d6bfe" /></a><br /><br />
+  <a href="https://www.npmjs.com/package/@deepseek-ai/dsh?activeTab=versions"><img alt="适配 DSH 版本：0.1.1-rc.2" src="https://img.shields.io/badge/DSH-0.1.1--rc.2-4d6bfe" /></a><br /><br />
   <img alt="一键压缩上下文" src="https://img.shields.io/badge/-一键压缩上下文-4d6bfe" /> <img alt="与 /compact 同通道" src="https://img.shields.io/badge/-%E4%B8%8E%20%2Fcompact%20同通道-4d6bfe" /> <img alt="中英文实时切换" src="https://img.shields.io/badge/-中英文实时切换-4d6bfe" /><br /><br />
   在 DSH Web 的<b>上下文计量面板</b>里放一个「压缩上下文」按钮——点击即向当前会话提交 <code>/compact</code>，<br />
   把较早的对话历史压缩成摘要，为后续对话腾出上下文空间。<br />
@@ -39,6 +40,15 @@
 
 **前置**：已装好 DSH（`dsh web` 能正常运行），Node.js ≥ 20、pnpm ≥ 10。
 
+**方式一：从 npm 安装（推荐）**
+
+```sh
+dsh plugin --profile web add dsh-compact-button@latest
+```
+
+<details>
+<summary><b>方式二：从源码安装（调试本地改动时使用）</b></summary>
+
 ```sh
 # 1. 构建并打包
 git clone https://github.com/shyuan-hub/dsh-compact-button.git && cd dsh-compact-button
@@ -49,11 +59,15 @@ pnpm pack                                # 生成 dsh-compact-button-0.1.0.tgz
 dsh plugin --profile web add "file:<你的本地目录>/dsh-compact-button-0.1.0.tgz"
 ```
 
+</details>
+
 装完**重启 `dsh web`**，再硬刷新浏览器（Cmd/Ctrl+Shift+R）即可生效。
 
 > ✅ 无需手动编辑 profile 的 `package.json`：本包声明了 `dsh.bundle.patch`，`dsh plugin add` 安装后会自动把它追加进 `dsh.profile.bundles`。
 >
 > 🔧 调试本地改动时，可改用 link 通道：`dsh plugin --profile web add "link:<克隆目录绝对路径>"`，之后每次 `pnpm build` + 重启 `dsh web` 即可生效。
+>
+> 🔄 更新：`dsh plugin --profile web add dsh-compact-button@latest`，然后重启 `dsh web` 并硬刷新。
 
 > 📦 插件自带 bundle patch（[`cordis.patch.yml`](./cordis.patch.yml)）：装入 profile 后，启动时会由它自动插入本插件的挂载条目，无需手动编辑 profile 的 `cordis.patch.yml`；若聚合包已挂载本插件，该条目会自动退让，避免重复挂载。
 
