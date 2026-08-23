@@ -1,24 +1,76 @@
 # dsh-compact-button
 
-在 DSH Web 的对话界面里给「压缩上下文」一个一键入口：点击即向当前会话提交 `/compact`，把较早的对话历史压缩成摘要，为后续对话腾出上下文空间。
+<!-- Hero -->
+<div align="center">
+  <b style="font-size: 1.15em;">上下文快满了？点一下，把早期对话压缩成摘要</b><br /><br />
+  <a href="https://github.com/shyuan-hub/dsh-compact-button/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/shyuan-hub/dsh-compact-button" /></a>
+  <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg" /></a>
+  <a href="https://www.npmjs.com/package/@deepseek-ai/dsh?activeTab=versions"><img alt="适配 DSH 版本：0.1.1-rc.1" src="https://img.shields.io/badge/DSH-0.1.1--rc.1-4d6bfe" /></a><br /><br />
+  <img alt="一键压缩上下文" src="https://img.shields.io/badge/-一键压缩上下文-4d6bfe" /> <img alt="与 /compact 同通道" src="https://img.shields.io/badge/-%E4%B8%8E%20%2Fcompact%20同通道-4d6bfe" /> <img alt="中英文实时切换" src="https://img.shields.io/badge/-中英文实时切换-4d6bfe" /><br /><br />
+  在 DSH Web 的<b>上下文计量面板</b>里放一个「压缩上下文」按钮——点击即向当前会话提交 <code>/compact</code>，<br />
+  把较早的对话历史压缩成摘要，为后续对话腾出上下文空间。<br />
+  <i>English: a one-click <b>Compact context</b> button for the DSH Web context meter panel.</i>
+</div>
 
-English: A one-click **Compact context** button for the DSH Web conversation UI. One click submits `/compact` to the current session, summarizing older history to free up context space.
+<div align="center">
+  <img alt="dsh-compact-button 在上下文计量面板中的效果" src="doc/assets/screenshot.png" />
+  <br />
+  <i>输入框（composer）旁的上下文圆环展开后就是「上下文计量面板」，按钮就在里面</i>
+</div>
 
-## 效果 / Preview
+## 📑 目录
 
-![dsh-compact-button 在上下文计量面板中的效果](doc/assets/screenshot.png)
+- [✨ 功能一览](#-功能一览)
+- [🚀 安装](#-安装)
+- [🖱️ 按钮怎么用](#️-按钮怎么用)
+- [🔧 工作原理](#-工作原理)
+- [🛠️ 开发与构建](#️-开发与构建)
+- [⚠️ 已知限制](#️-已知限制)
 
-上图：DSH Web 中，输入框（composer）旁的上下文圆环展开后就是「上下文计量面板」，本插件在其中放了一个「压缩上下文」按钮。
+## ✨ 功能一览
 
-## 解决什么问题 / Why
+- **🔘 一键压缩**：长对话不断吃掉上下文窗口，以前得手动敲 `/compact`——现在按钮就放在你随时能看到的上下文面板上，一眼看到快满了，点一下即可
+- **🔁 同一条命令通道**：和手敲 `/compact` 走的是**完全相同的通道**（`session.command('/compact')`），压缩结果照常以命令行形式出现在对话流里，无特殊行为
+- **📊 状态实时反馈**：按钮文案随提交状态流转（待命 → 提交中 → 已提交 / 未匹配 / 失败），4 秒后自动回到待命，面板保持清爽
+- **🌏 多语言**：跟随 DSH 的语言设置，中文 / 英文实时切换
+- **🪶 零侵入**：纯 client 半边插件（host 半为空 apply）；槽位不存在时按钮安静地不渲染，不影响平台其余部分
 
-长对话会不断吃掉上下文窗口。以前想压缩，得手动在输入框敲 `/compact`。现在按钮就放在你随时能看到的上下文面板上——一眼看到上下文快满了，点一下即可。
+## 🚀 安装
 
-- 不用记斜杠命令，也不用离开面板；
-- 和手敲 `/compact` 走的是**同一条命令通道**，压缩结果照常以命令行形式出现在对话流里；
-- 跟随 DSH 的语言设置，中文 / 英文实时切换。
+**前置**：已装好 DSH（`dsh web` 能正常运行），Node.js ≥ 20、pnpm ≥ 10。
 
-## 按钮怎么用 / Using the button
+```sh
+# 1. 构建并打包
+git clone https://github.com/shyuan-hub/dsh-compact-button.git && cd dsh-compact-button
+pnpm install && pnpm build
+pnpm pack                                # 生成 dsh-compact-button-0.1.0.tgz
+
+# 2. 通过 dsh plugin 一键安装（file: 通道）
+dsh plugin --profile web add "file:<你的本地目录>/dsh-compact-button-0.1.0.tgz"
+```
+
+装完**硬刷新浏览器**（Cmd/Ctrl+Shift+R）即可（本插件只有 client 半边，无需重启 `dsh web`）。
+
+> ✅ 无需手动编辑 profile 的 `package.json`：本包声明了 `dsh.bundle.patch`，`dsh plugin add` 安装后会自动把它追加进 `dsh.profile.bundles`。
+>
+> 🔧 调试本地改动时，可改用 link 通道：`dsh plugin --profile web add "link:<克隆目录绝对路径>"`，之后每次 `pnpm build` + 硬刷新即可生效。
+
+> 📦 插件自带 bundle patch（[`cordis.patch.yml`](./cordis.patch.yml)）：装入 profile 后，启动时会由它自动插入本插件的挂载条目，无需手动编辑 profile 的 `cordis.patch.yml`；若聚合包已挂载本插件，该条目会自动退让，避免重复挂载。
+
+<details>
+<summary><b>常见问题</b></summary>
+
+| 现象 | 原因与解决 |
+|---|---|
+| 面板里**看不到按钮** | 上下文计量面板必须声明 `conversation.context.actions` 子槽位（见下方「平台补丁」）。确认补丁已应用后硬刷新。 |
+| 点击后显示「命令未匹配」 | 当前 composer 没有可提交命令的会话。切换到有活跃会话的页面再试。 |
+| 改动后没生效 | 本插件只有 client 半边，硬刷新浏览器（Cmd/Ctrl+Shift+R）即可，无需重启 `dsh web`。 |
+
+</details>
+
+> 🔩 **依赖平台补丁**：上下文计量面板的 `conversation.context.actions` 子槽位由平台补丁声明（随附的平台补丁已应用）。若该槽位不存在，按钮不会渲染，插件其余部分不受影响。
+
+## 🖱️ 按钮怎么用
 
 按钮位于上下文计量面板（composer 旁的上下文圆环，点击展开）里，文案会随点击状态变化：
 
@@ -30,29 +82,11 @@ English: A one-click **Compact context** button for the DSH Web conversation UI.
 | 未匹配 | 命令未匹配 | Command not matched | 当前 composer 没有可提交命令的会话 |
 | 失败 | 提交失败 | Submission failed | 提交命令时出错 |
 
-状态会在 4 秒后自动回到「待命」，面板保持清爽。
+状态会在 4 秒后自动回到「待命」。
 
-## 安装 / Install
+## 🔧 工作原理
 
-```bash
-# 1. 构建并打包
-cd DSH-compact-button
-pnpm install
-pnpm build
-pnpm pack            # 生成 dsh-compact-button-0.1.0.tgz
-
-# 2. 装入 web profile（与 dsh-better-sidebar 相同的 file: 通道）
-cd ~/.dsh/profiles/web
-pnpm add "dsh-compact-button=file:/Users/shuai/parttime/DSH-compact-button/dsh-compact-button-0.1.0.tgz"
-```
-
-然后在 `~/.dsh/profiles/web/package.json` 的 `dsh.profile.bundles` 数组里追加 `"dsh-compact-button"`，重启 `dsh web` 即可。
-
-> **依赖平台补丁**：上下文计量面板必须声明 `conversation.context.actions` 子槽位（本仓库随附的平台补丁已应用）。若该槽位不存在，按钮不会渲染，插件其余部分不受影响。
-
-## 工作原理（面向开发者） / How it works
-
-- **平台扩展点**：`@deepseek-ai/dsh-client-ui-conversation` 的 ContextMeter 面板声明子槽位 `conversation.context.actions`（`conversation.composer.bar` 的 children，kind: list，scope: session-maybe）。
+- **平台扩展点**：`@deepseek-ai/dsh-client-ui-conversation` 的 ContextMeter 面板声明子槽位 `conversation.context.actions`（`conversation.composer.bar` 的 children，kind: list）。
 - **client 半边**：通过 `slots.inject` 等待平台声明后，把 `CompactButton` 注册进该槽位；点击调用 `session.command('/compact')`——与手敲 `/compact` 完全同一条通道（接纳语义由 Host 的 command-compact 插件拥有，压缩结果以命令行形式出现在对话流中）。
 - **Host 半边**：空 `apply`，无宿主行为。
 - **i18n**：字典注册在 `compactButton` 命名空间（zh/en），跟随 DSH 语言设置实时切换。
@@ -64,3 +98,26 @@ pnpm add "dsh-compact-button=file:/Users/shuai/parttime/DSH-compact-button/dsh-c
 | `lib/index.js` | Host 半边（空 apply，无宿主行为） |
 | `lib/client.js` | 官方 profile 通道（bundle id = 包名 `dsh-compact-button`） |
 | `lib/client-registry.js` | 插件注册表通道（bundle id = manifest id `dsh-external/dsh-compact-button`） |
+
+## 🛠️ 开发与构建
+
+```sh
+pnpm install
+pnpm typecheck    # tsc --noEmit
+pnpm build        # rm -rf lib && tsdown → lib/index.js + lib/client.js + lib/client-registry.js
+pnpm watch        # tsdown --watch
+```
+
+**架构**：单 npm 包、host/client 双半结构——host（`src/index.ts`）为空 apply；client（`src/client/index.tsx`）注册 `CompactButton` 到槽位并处理状态流转与 i18n。插件按 DSH 官方规范组织（无 default 导出、双 client bundle），运行期不依赖 npm / checkout（`@deepseek-ai/*` 由 web profile 提供）。
+
+## ⚠️ 已知限制
+
+- 依赖平台为上下文计量面板声明 `conversation.context.actions` 子槽位（需随附补丁）；槽位缺失时按钮不渲染
+- 按钮只负责提交 `/compact`，压缩的接纳与执行语义由 Host 侧 command-compact 插件拥有
+- 状态提示 4 秒后自动复位，不提供压缩进度展示
+
+---
+
+<div align="center">
+  <sub>MIT License · Built for the <a href="https://github.com/deepseek-ai/deepseek-harness">DeepSeek Harness</a> ecosystem</sub>
+</div>
