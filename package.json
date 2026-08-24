@@ -1,7 +1,7 @@
 {
   "name": "dsh-compact-button",
-  "version": "0.1.0",
-  "description": "DSH web plugin: adds a one-click Compact button to the conversation context meter panel; clicking it submits /compact to summarize older history.",
+  "version": "0.2.0",
+  "description": "DSH web plugin: adds a one-click Compact button and a New Session button to the conversation context meter panel. Compact submits /compact to summarize older history; New Session starts a fresh session in the same workspace (agent preset and permission settings follow the deployment default).",
   "type": "module",
   "publishConfig": {
     "access": "public"
