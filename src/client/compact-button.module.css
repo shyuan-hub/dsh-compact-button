@@ -6,3 +6,5 @@
 .buttonPending{color:var(--dsw-alias-label-tertiary)}
 .buttonSubmitted{border-color:var(--dsw-alias-state-business-tertiary);color:var(--dsw-alias-state-business-primary)}
 .buttonFailed{border-color:var(--dsw-alias-state-error-secondary);color:var(--dsw-alias-state-error-primary)}
+.row{width:100%;gap:8px;display:flex}
+.row>.button{width:auto;min-width:0;flex:1}

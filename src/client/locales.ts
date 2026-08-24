@@ -13,6 +13,8 @@ export const zh = {
   submitted: '已提交压缩',
   rejected: '命令未匹配',
   failed: '提交失败',
+  newSession: '新建会话',
+  newSessionTooltip: '在当前工作区新建一个会话，agent 预设、workspace 与权限设置保持一致',
 } as const
 
 /** The en dictionary (registered under {@link LOCALE_NS}). */
@@ -23,6 +25,8 @@ export const en = {
   submitted: 'Compaction submitted',
   rejected: 'Command not matched',
   failed: 'Submission failed',
+  newSession: 'New session',
+  newSessionTooltip: 'Start a new session in this workspace with the same agent preset and permissions',
 } as const
 
 /** The namespace this plugin's dictionaries register under. */
