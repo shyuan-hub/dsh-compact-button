@@ -7,10 +7,10 @@
   <a href="https://github.com/shyuan-hub/dsh-compact-button/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/shyuan-hub/dsh-compact-button" /></a>
   <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg" /></a>
   <a href="https://www.npmjs.com/package/@deepseek-ai/dsh?activeTab=versions"><img alt="适配 DSH 版本：0.1.1-rc.2" src="https://img.shields.io/badge/DSH-0.1.1--rc.2-4d6bfe" /></a><br /><br />
-  <img alt="一键压缩上下文" src="https://img.shields.io/badge/-一键压缩上下文-4d6bfe" /> <img alt="与 /compact 同通道" src="https://img.shields.io/badge/-%E4%B8%8E%20%2Fcompact%20同通道-4d6bfe" /> <img alt="中英文实时切换" src="https://img.shields.io/badge/-中英文实时切换-4d6bfe" /><br /><br />
-  在 DSH Web 的<b>上下文计量面板</b>里放一个「压缩上下文」按钮——点击即向当前会话提交 <code>/compact</code>，<br />
-  把较早的对话历史压缩成摘要，为后续对话腾出上下文空间。<br />
-  <i>English: a one-click <b>Compact context</b> button for the DSH Web context meter panel.</i>
+  <img alt="一键压缩上下文" src="https://img.shields.io/badge/-一键压缩上下文-4d6bfe" /> <img alt="一键新建会话" src="https://img.shields.io/badge/-一键新建会话-4d6bfe" /> <img alt="与 /compact 同通道" src="https://img.shields.io/badge/-%E4%B8%8E%20%2Fcompact%20同通道-4d6bfe" /> <img alt="中英文实时切换" src="https://img.shields.io/badge/-中英文实时切换-4d6bfe" /><br /><br />
+  在 DSH Web 的<b>上下文计量面板</b>里放两个按钮：「压缩上下文」点击即向当前会话提交 <code>/compact</code>，<br />
+  把较早的对话历史压缩成摘要；「新建会话」点击即在<b>同一 workspace</b> 中开启一个新会话。<br />
+  <i>English: a one-click <b>Compact context</b> button and a <b>New session</b> button for the DSH Web context meter panel.</i>
 </div>
 
 <div align="center">
@@ -34,6 +34,7 @@
 - **🔁 同一条命令通道**：和手敲 `/compact` 走的是**完全相同的通道**（`session.command('/compact')`），压缩结果照常以命令行形式出现在对话流里，无特殊行为
 - **📊 状态实时反馈**：按钮文案随提交状态流转（待命 → 提交中 → 已提交 / 未匹配 / 失败），4 秒后自动回到待命，面板保持清爽
 - **🌏 多语言**：跟随 DSH 的语言设置，中文 / 英文实时切换
+- **🆕 新建会话**：在压缩按钮右侧再放一个「新建会话」按钮——点击即在**同一 workspace** 中开启一个新会话并跳转过去；agent 预设与权限设置沿用部署默认（与当前会话一致的前提见「已知限制」）
 - **🪶 零侵入**：纯 client 半边插件（host 半为空 apply）；槽位不存在时按钮安静地不渲染，不影响平台其余部分
 
 ## 🚀 安装
@@ -53,10 +54,10 @@ dsh plugin --profile web add dsh-compact-button@latest
 # 1. 构建并打包
 git clone https://github.com/shyuan-hub/dsh-compact-button.git && cd dsh-compact-button
 pnpm install && pnpm build
-pnpm pack                                # 生成 dsh-compact-button-0.1.0.tgz
+pnpm pack                                # 生成 dsh-compact-button-0.2.0.tgz
 
 # 2. 通过 dsh plugin 一键安装（file: 通道）
-dsh plugin --profile web add "file:<你的本地目录>/dsh-compact-button-0.1.0.tgz"
+dsh plugin --profile web add "file:<你的本地目录>/dsh-compact-button-0.2.0.tgz"
 ```
 
 </details>
@@ -86,7 +87,11 @@ dsh plugin --profile web add "file:<你的本地目录>/dsh-compact-button-0.1.0
 
 ## 🖱️ 按钮怎么用
 
-按钮位于上下文计量面板（composer 旁的上下文圆环，点击展开）里，文案会随点击状态变化：
+面板里有**两个**按钮，并排在同一行：左侧「压缩上下文」、右侧「新建会话」（composer 旁的上下文圆环，点击展开）。
+
+### 压缩上下文（左侧）
+
+文案会随点击状态变化：
 
 | 状态 | 中文 | English | 含义 |
 | --- | --- | --- | --- |
@@ -98,10 +103,16 @@ dsh plugin --profile web add "file:<你的本地目录>/dsh-compact-button-0.1.0
 
 状态会在 4 秒后自动回到「待命」。
 
+### 新建会话（右侧）
+
+点击即在**当前会话所在的 workspace** 中开启一个新会话并跳转过去（`workspaces.startSession()`）。点击后会短暂锁定约 1.5 秒，防止误连点。新会话沿用部署默认的 agent 预设与权限设置——若当前会话用的是非默认预设，新会话不会自动沿用（见「已知限制」）。
+
 ## 🔧 工作原理
 
 - **平台扩展点**：`@deepseek-ai/dsh-client-ui-conversation` 的 ContextMeter 面板声明子槽位 `conversation.context.actions`（`conversation.composer.bar` 的 children，kind: list）。
-- **client 半边**：通过 `slots.inject` 等待平台声明后，把 `CompactButton` 注册进该槽位；点击调用 `session.command('/compact')`——与手敲 `/compact` 完全同一条通道（接纳语义由 Host 的 command-compact 插件拥有，压缩结果以命令行形式出现在对话流中）。
+- **client 半边**：通过 `slots.inject` 等待平台声明后，把一个并排容器（`ContextActionRow`）注册进该槽位，容器内左为 `CompactButton`、右为 `NewSessionButton`：
+  - `CompactButton` 点击调用 `session.command('/compact')`——与手敲 `/compact` 完全同一条通道（接纳语义由 Host 的 command-compact 插件拥有，压缩结果以命令行形式出现在对话流中）。
+  - `NewSessionButton` 点击调用 `workspaces.startSession()`——在当前会话所在 workspace 中开启新会话并跳转；点击后约 1.5 秒内锁定防止误连点。
 - **Host 半边**：空 `apply`，无宿主行为。
 - **i18n**：字典注册在 `compactButton` 命名空间（zh/en），跟随 DSH 语言设置实时切换。
 
@@ -127,8 +138,9 @@ pnpm watch        # tsdown --watch
 ## ⚠️ 已知限制
 
 - 依赖平台为上下文计量面板声明 `conversation.context.actions` 子槽位（需随附补丁）；槽位缺失时按钮不渲染
-- 按钮只负责提交 `/compact`，压缩的接纳与执行语义由 Host 侧 command-compact 插件拥有
+- 压缩按钮只负责提交 `/compact`，压缩的接纳与执行语义由 Host 侧 command-compact 插件拥有
 - 状态提示 4 秒后自动复位，不提供压缩进度展示
+- 新建会话按钮在同一 workspace 中开启新会话，但**沿用部署默认的 agent 预设与权限设置**；若当前会话用的是非默认预设，新会话不会自动沿用（client 侧 `session.create` 不暴露预设/权限选择）
 
 ---
 
