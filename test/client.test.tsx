@@ -5,7 +5,7 @@
  */
 import { describe, expect, it, vi } from 'vitest'
 import { apply, inject } from '../src/client/index.tsx'
-import { CompactButton } from '../src/client/CompactButton.tsx'
+import { ContextActionRow } from '../src/client/ContextActionRow.tsx'
 import { LOCALE_NS, en, zh } from '../src/client/locales.ts'
 import type { CommandAdmission, Context } from '../src/context-types.ts'
 
@@ -37,6 +37,7 @@ function makeCtx(overrides?: {
   const localeCalls: Array<{ ns: string; lang: 'zh' | 'en'; dictionary: Record<string, string> }> = []
   const offFns = new Map<string, () => void>()
 
+  const startSession = vi.fn()
   const ctx = {
     effect(run: () => void | (() => void), label?: string): void {
       effects.push({ label, run })
@@ -63,9 +64,14 @@ function makeCtx(overrides?: {
       binding: overrides?.binding ?? ((): undefined => undefined),
       list: { getSnapshot: () => ({ current: undefined, byId: {} }) },
     },
+    workspaces: {
+      startSession: (workspaceId?: string): void => {
+        startSession(workspaceId)
+      },
+    },
   }
 
-  return { ctx, effects, registered, injectCalls, localeCalls, offFns }
+  return { ctx, effects, registered, injectCalls, localeCalls, offFns, startSession }
 }
 
 /** Run every captured effect and return their cleanup hooks. */
@@ -83,9 +89,19 @@ function getCompact(registered: RegisteredSlot[], sessionId: string | undefined)
   return compact as () => Promise<boolean>
 }
 
+/** Extract the `newSession` closure the slot hands to one session id. */
+function getNewSession(registered: RegisteredSlot[], sessionId: string | undefined): () => void {
+  const slot = registered[0]
+  if (!slot) throw new Error('no slot registered')
+  const props = slot.options.inject?.(sessionId)
+  const newSession = props?.newSession
+  if (typeof newSession !== 'function') throw new Error('inject did not provide a newSession prop')
+  return newSession as () => void
+}
+
 describe('client inject declaration', () => {
-  it('declares the three services it reads', () => {
-    expect(inject).toEqual(['slots', 'sessions', 'locale'])
+  it('declares the four services it reads', () => {
+    expect(inject).toEqual(['slots', 'sessions', 'workspaces', 'locale'])
   })
 })
 
@@ -129,7 +145,7 @@ describe('client apply', () => {
     expect(registered).toHaveLength(0)
     injectCalls[0]?.callback(undefined)
     expect(registered).toHaveLength(1)
-    expect(registered[0]?.component).toBe(CompactButton)
+    expect(registered[0]?.component).toBe(ContextActionRow)
   })
 
   it('registers a unique list-slot instance with the plugin metadata', () => {
@@ -213,5 +229,41 @@ describe('compact closure', () => {
     injectCalls[0]?.callback(undefined)
 
     await expect(getCompact(registered, 'sess-1')()).resolves.toBe(false)
+  })
+})
+
+describe('newSession closure', () => {
+  it('provides a newSession prop on the slot', () => {
+    const { ctx, effects, injectCalls, registered } = makeCtx()
+    apply(ctx as unknown as Context)
+    activate(effects)
+    injectCalls[0]?.callback(undefined)
+
+    const props = registered[0]?.options.inject?.('sess-1')
+    expect(typeof props?.newSession).toBe('function')
+  })
+
+  it('starts a session with no explicit workspace (runtime resolves the current one)', () => {
+    const { ctx, effects, injectCalls, registered, startSession } = makeCtx()
+    apply(ctx as unknown as Context)
+    activate(effects)
+    injectCalls[0]?.callback(undefined)
+
+    getNewSession(registered, 'sess-1')()
+    expect(startSession).toHaveBeenCalledExactlyOnceWith(undefined)
+  })
+
+  it('is independent of the compact closure (no session binding required)', () => {
+    // Even with no session binding (no seat session), newSession still works —
+    // it targets the runtime's current Workspace, not this seat's session.
+    const { ctx, effects, injectCalls, registered, startSession } = makeCtx({
+      binding: () => undefined,
+    })
+    apply(ctx as unknown as Context)
+    activate(effects)
+    injectCalls[0]?.callback(undefined)
+
+    getNewSession(registered, undefined)()
+    expect(startSession).toHaveBeenCalledOnce()
   })
 })

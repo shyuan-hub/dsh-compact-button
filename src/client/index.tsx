@@ -1,22 +1,28 @@
 /**
- * Client half of dsh-compact-button: registers the Compact button into the
+ * Client half of dsh-compact-button: registers an action row into the
  * conversation context meter panel's actions slot (`conversation.context.actions`,
  * declared as a child of `conversation.composer.bar` by the platform's
- * ui-conversation ContextMeter). One click submits `/compact` to this seat's
- * session through the existing command seam — the same path a typed `/compact`
- * takes — so admission, locking, durability and the command row in the chat
- * all stay owned by the Host's command-compact plugin.
+ * ui-conversation ContextMeter). The row holds two buttons:
+ * - Compact: one click submits `/compact` to this seat's session through the
+ *   existing command seam — the same path a typed `/compact` takes — so
+ *   admission, locking, durability and the command row in the chat all stay
+ *   owned by the Host's command-compact plugin.
+ * - New session: one click asks the client `workspaces` runtime to start a
+ *   fresh Session in the current Session's Workspace and navigate to it, so
+ *   the new Session shares the previous one's Workspace and inherits the same
+ *   deployment-level agent preset and permission policy.
  *
  * Services: slots (slot registration), sessions (scoped session command
- * submission), locale (dictionary registration).
+ * submission), workspaces (new-session action), locale (dictionary
+ * registration).
  */
 import type { Context } from '../context-types.ts'
-import { CompactButton } from './CompactButton.tsx'
+import { ContextActionRow } from './ContextActionRow.tsx'
 import { LOCALE_NS, en, zh } from './locales.ts'
 
 /** The services this plugin reads (declared on the Context in
  *  ../context-types.ts; Cordis guards service access without inject). */
-export const inject = ['slots', 'sessions', 'locale']
+export const inject = ['slots', 'sessions', 'workspaces', 'locale']
 
 /**
  * Client plugin body.
@@ -62,9 +68,16 @@ export function apply(ctx: Context): void {
                 const result = await scoped.session.command('/compact')
                 return result.ok && result.value?.matched === true
               },
+              // Start a fresh Session in the current Session's Workspace and
+              // navigate to it. Called with no workspace id so the runtime
+              // resolves the target from the current Session (then the recent
+              // Workspace projection as a fallback).
+              newSession: (): void => {
+                ctx.workspaces.startSession()
+              },
             }),
           },
-          CompactButton,
+          ContextActionRow,
         ),
       ),
     'dsh-compact-button: context actions slot',
