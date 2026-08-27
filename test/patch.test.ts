@@ -43,6 +43,16 @@ describe('patchSource', () => {
     for (const r of patch.REPLACEMENTS) expect(result.output).not.toContain(r.old)
   })
 
+  it('keeps injected array elements comma-separated (syntax safety)', () => {
+    const footer = patch.REPLACEMENTS.find(r => r.label === 'panel actions footer')!
+    expect(footer).toBeDefined()
+    // The pristine last array element ends without a comma; the patch must
+    // add one before injecting the slot footer, or the bundle stops parsing
+    // ("loaded without registering" on the client side).
+    expect(footer!.old).toMatch(/\}\)\n/)
+    expect(footer!.replacement).toMatch(/\}\),\n/)
+  })
+
   it('is idempotent: a patched source is detected by its marker', () => {
     const first = patch.patchSource(pristineSource())
     expect(first.status).toBe('patched')
