@@ -20,14 +20,13 @@
  *     without writing (the host bundle stays untouched and the plugin
  *     degrades to "slot absent → button not rendered"),
  *   - an already-patched file is detected by marker and skipped, so the
- *     postinstall hook and the host-half self-heal are both idempotent.
+ *     host-half self-heal and a manual CLI run are both idempotent.
  *
  * Entry points:
- *   - postinstall (patch-run.cjs → main()) patches right after the plugin
- *     is installed into a profile,
  *   - the host half (lib/index.js apply) calls patchInstalledTargets() on
  *     every dsh start, so a platform reinstall that restores the pristine
- *     bundle heals itself on the next start.
+ *     bundle heals itself on the next start,
+ *   - patch-run.cjs (manual CLI) patches ahead of the next dsh start.
  */
 'use strict';
 
@@ -58,7 +57,7 @@ const REPLACEMENTS = [
   {
     label: 'panel actions footer',
     old: '\t\t\t\t\t\t\t}, row.key))\n\t\t\t\t\t\t})\n\t\t\t\t\t]\n\t\t\t\t})]\n\t\t\t});',
-    replacement: '\t\t\t\t\t\t\t}, row.key))\n\t\t\t\t\t\t})\n' +
+    replacement: '\t\t\t\t\t\t\t}, row.key))\n\t\t\t\t\t\t}),\n' +
       '\t\t\t\t\t\trenderSlot === void 0 ? null : (0, react_jsx_runtime.jsx)("div", {\n' +
       '\t\t\t\t\t\t\tclassName: ContextMeter_module_css_default.actions,\n' +
       '\t\t\t\t\t\t\tchildren: renderSlot("conversation.context.actions", {})\n' +
@@ -182,11 +181,11 @@ function patchInstalledTargets(startDirs) {
 }
 
 /**
- * CLI entry (postinstall). Never exits non-zero: a missing or drifted
+ * CLI entry (manual run). Never exits non-zero: a missing or drifted
  * platform bundle degrades to "button not rendered" (the plugin's
- * documented behavior for an absent slot) and must not break the install.
+ * documented behavior for an absent slot) and must not break the run.
  * @param startDirs - climb origins (defaults to this script's directory
- *   plus cwd, which inside postinstall are the installed plugin package).
+ *   plus cwd, which for an installed plugin package locate the profile).
  */
 function main(startDirs) {
   const origins = startDirs && startDirs.length > 0 ? startDirs : [__dirname, process.cwd()];

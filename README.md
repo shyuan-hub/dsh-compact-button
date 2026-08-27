@@ -81,13 +81,13 @@ dsh plugin --profile web add "file:<你的本地目录>/dsh-compact-button-0.2.0
 
 | 现象 | 原因与解决 |
 |---|---|
-| 面板里**看不到按钮** | 按钮依赖 `conversation.context.actions` 子槽位，官方 DSH（含 0.1.1-rc.2）并未声明它，由本插件**自动应用的平台补丁**注入（安装时的 postinstall 与每次 `dsh web` 启动的 host 半边自愈）。检查 dsh 启动日志有无 `[dsh-compact-button patch] ... drifted/skipped` 警告；若平台 bundle 版本漂移（非 0.1.1-rc.2），补丁会安全中止，需等上游支持该槽位。 |
+| 面板里**看不到按钮** | 按钮依赖 `conversation.context.actions` 子槽位，官方 DSH（含 0.1.1-rc.2）并未声明它，由本插件**自动应用的平台补丁**注入（每次 `dsh web` 启动时由 host 半边自愈）。检查 dsh 启动日志有无 `[dsh-compact-button patch] ... drifted/skipped` 警告；若平台 bundle 版本漂移（非 0.1.1-rc.2），补丁会安全中止，需等上游支持该槽位。 |
 | 点击后显示「命令未匹配」 | 当前 composer 没有可提交命令的会话。切换到有活跃会话的页面再试。 |
 | 安装 / 改动后没生效 | 本插件需要**重启 `dsh web`** 才能生效（仅硬刷新浏览器不够），重启后再硬刷新页面。 |
 
 </details>
 
-> 🔩 **平台补丁（自动应用）**：官方 `@deepseek-ai/dsh-client-ui-conversation@0.1.1-rc.2` 并未声明 `conversation.context.actions` 槽位。本插件自带补丁脚本（`patch-context-meter.cjs`），在**安装时**（postinstall）与**每次 `dsh web` 启动时**（host 半边）自动定位已安装的平台 bundle 并就地注入该槽位的声明与渲染。补丁幂等、逐条断言匹配；若平台版本漂移则安全中止（不改动平台文件），此时按钮不渲染，插件其余部分不受影响。
+> 🔩 **平台补丁（自动应用）**：官方 `@deepseek-ai/dsh-client-ui-conversation@0.1.1-rc.2` 并未声明 `conversation.context.actions` 槽位。本插件自带补丁脚本（`patch-context-meter.cjs`），在**每次 `dsh web` 启动时**（host 半边）自动定位已安装的平台 bundle 并就地注入该槽位的声明与渲染。补丁幂等、逐条断言匹配；若平台版本漂移则安全中止（不改动平台文件），此时按钮不渲染，插件其余部分不受影响。本包**不含任何安装脚本**（不依赖 postinstall，任何包管理器安装都不会报错或被拦截）；如需在启动前提前打好补丁，可手动执行 `node node_modules/dsh-compact-button/patch-run.cjs`。
 
 ## 🖱️ 按钮怎么用
 
@@ -127,7 +127,7 @@ dsh plugin --profile web add "file:<你的本地目录>/dsh-compact-button-0.2.0
 | `lib/index.js` | Host 半边（启动时自愈应用平台补丁，注入 `conversation.context.actions` 槽位） |
 | `lib/client.js` | 官方 profile 通道（bundle id = 包名 `dsh-compact-button`） |
 | `lib/client-registry.js` | 插件注册表通道（bundle id = manifest id `dsh-external/dsh-compact-button`） |
-| `patch-context-meter.cjs` / `patch-run.cjs` | 平台补丁模块与 CLI 入口（postinstall 调用） |
+| `patch-context-meter.cjs` / `patch-run.cjs` | 平台补丁模块与手动 CLI 入口（安装后补丁由每次 `dsh web` 启动的 host 半边自动应用，无需安装脚本） |
 
 ## 🛠️ 开发与构建
 
