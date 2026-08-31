@@ -64,7 +64,7 @@ function makeCtx(overrides?: {
       binding: overrides?.binding ?? ((): undefined => undefined),
       list: { getSnapshot: () => ({ current: undefined, byId: {} }) },
     },
-    workspaces: {
+    uiWorkspace: {
       startSession: (workspaceId?: string): void => {
         startSession(workspaceId)
       },
@@ -101,7 +101,7 @@ function getNewSession(registered: RegisteredSlot[], sessionId: string | undefin
 
 describe('client inject declaration', () => {
   it('declares the four services it reads', () => {
-    expect(inject).toEqual(['slots', 'sessions', 'workspaces', 'locale'])
+    expect(inject).toEqual(['slots', 'sessions', 'uiWorkspace', 'locale'])
   })
 })
 
@@ -243,7 +243,7 @@ describe('newSession closure', () => {
     expect(typeof props?.newSession).toBe('function')
   })
 
-  it('starts a session with no explicit workspace (runtime resolves the current one)', () => {
+  it('starts a session with no explicit workspace (uiWorkspace resolves the current one)', () => {
     const { ctx, effects, injectCalls, registered, startSession } = makeCtx()
     apply(ctx as unknown as Context)
     activate(effects)
@@ -255,7 +255,7 @@ describe('newSession closure', () => {
 
   it('is independent of the compact closure (no session binding required)', () => {
     // Even with no session binding (no seat session), newSession still works —
-    // it targets the runtime's current Workspace, not this seat's session.
+    // it targets uiWorkspace's current Workspace, not this seat's session.
     const { ctx, effects, injectCalls, registered, startSession } = makeCtx({
       binding: () => undefined,
     })

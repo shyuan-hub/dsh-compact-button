@@ -26,9 +26,8 @@ export interface CompactScopedSession {
   command(line: string): Promise<CommandAdmission>
 }
 
-/** One row of the client session-list mirror (the fields this plugin reads:
- *  the running flag for the meter, plus blank / cwd / agentPreset for
- *  deriving a "new session matching the previous one"). */
+/** One row of the client session-list mirror (the fields this plugin might
+ *  read: the running flag for the meter, plus blank / cwd / agentPreset). */
 export interface ClientSessionSummary {
   running?: boolean
   blank?: boolean
@@ -48,37 +47,13 @@ export interface ClientSessions {
   }
 }
 
-/** The client workspaces service face this plugin touches. `startSession`
- *  resolves the target Workspace (explicit id, then the current Session's
- *  Workspace, then the recent Workspace projection), connects or creates a
- *  fresh Session there, and navigates to it. `list` exposes the workspace
- *  mirror used to map the current Session's cwd back to its workspace id. */
-export interface ClientWorkspaces {
+/** The client `uiWorkspace` navigation service face this plugin touches
+ *  (`@deepseek-ai/dsh-client-ui-workspace`). `startSession` resolves the
+ *  target Workspace (explicit id, then the current Session's Workspace,
+ *  then the recent Workspace projection), connects or creates a fresh
+ *  Session there, and navigates to it. */
+export interface ClientUiWorkspace {
   startSession(workspaceId?: string): void
-  list: {
-    getSnapshot(): {
-      items: Array<{ id: string; path: string; sessionIds: string[] }>
-      archivedSessionIds?: string[]
-    }
-  }
-}
-
-/** The wire-API face of the client connection this plugin consumes.
- *  `sessions.create` is the only creation path that accepts an explicit
- *  `agentPreset`, so the "new session" feature drives it directly (rather
- *  than the higher-level `startSession`, which always uses the default
- *  preset). */
-export interface ClientConnectionApi {
-  api: {
-    sessions: {
-      create(request: {
-        workspaceId?: string
-        cwd?: string
-        sessionId?: string
-        agentPreset?: string
-      }): Promise<{ sessionId: string; agentPreset?: string }>
-    }
-  }
 }
 
 /** The client locale service face (dictionary registration + read). */
@@ -106,12 +81,12 @@ export interface ClientSlots {
 
 declare module 'cordis' {
   interface Context {
-    /** The client slot registry (`@deepseek-ai/dsh-client-ui-slots`). */
+    /** The client slot registry (`@deepseek-ai/dsh-client-ui-renderer`). */
     slots: ClientSlots
-    /** The client session feed (`@deepseek-ai/dsh-client-runtime`). */
+    /** The client session feed (`@deepseek-ai/dsh-api-session-controller`). */
     sessions: ClientSessions
-    /** The client workspace feed (`@deepseek-ai/dsh-client-runtime`). */
-    workspaces: ClientWorkspaces
+    /** The client Workspace navigation service (`@deepseek-ai/dsh-client-ui-workspace`). */
+    uiWorkspace: ClientUiWorkspace
     /** The client locale service (`@deepseek-ai/dsh-client-locale`). */
     locale: ClientLocale
     /**

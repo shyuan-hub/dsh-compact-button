@@ -1,6 +1,6 @@
 {
   "id": "dsh-external/dsh-compact-button",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "main": "./lib/index.js",
   "description": "在对话上下文计量面板中增加一键压缩按钮与新建会话按钮：压缩按钮点击提交 /compact 将较早的对话历史压缩为摘要；新建会话按钮在同一 workspace 中开启新会话（agent 预设与权限设置沿用部署默认）",
   "engines": {

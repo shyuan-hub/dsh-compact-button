@@ -7,13 +7,13 @@
  *   existing command seam — the same path a typed `/compact` takes — so
  *   admission, locking, durability and the command row in the chat all stay
  *   owned by the Host's command-compact plugin.
- * - New session: one click asks the client `workspaces` runtime to start a
+ * - New session: one click asks the client `uiWorkspace` service to start a
  *   fresh Session in the current Session's Workspace and navigate to it, so
  *   the new Session shares the previous one's Workspace and inherits the same
  *   deployment-level agent preset and permission policy.
  *
  * Services: slots (slot registration), sessions (scoped session command
- * submission), workspaces (new-session action), locale (dictionary
+ * submission), uiWorkspace (new-session action), locale (dictionary
  * registration).
  */
 import type { Context } from '../context-types.ts'
@@ -22,7 +22,7 @@ import { LOCALE_NS, en, zh } from './locales.ts'
 
 /** The services this plugin reads (declared on the Context in
  *  ../context-types.ts; Cordis guards service access without inject). */
-export const inject = ['slots', 'sessions', 'workspaces', 'locale']
+export const inject = ['slots', 'sessions', 'uiWorkspace', 'locale']
 
 /**
  * Client plugin body.
@@ -69,11 +69,11 @@ export function apply(ctx: Context): void {
                 return result.ok && result.value?.matched === true
               },
               // Start a fresh Session in the current Session's Workspace and
-              // navigate to it. Called with no workspace id so the runtime
+              // navigate to it. Called with no workspace id so uiWorkspace
               // resolves the target from the current Session (then the recent
               // Workspace projection as a fallback).
               newSession: (): void => {
-                ctx.workspaces.startSession()
+                ctx.uiWorkspace.startSession()
               },
             }),
           },

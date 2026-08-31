@@ -1,8 +1,8 @@
 /**
  * Unit tests for patch-context-meter.cjs — the platform patch that
  * declares and renders the `conversation.context.actions` slot inside the
- * ui-conversation ContextMeter bundle (the official rc2 bundle does not
- * ship it; without the patch the plugin's buttons never render).
+ * ui-conversation ContextMeter bundle (the official 0.1.2-alpha.2 bundle
+ * does not ship it; without the patch the plugin's buttons never render).
  */
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'

@@ -2,7 +2,7 @@
  * Platform patch shipped with dsh-compact-button (pure module — no side
  * effects on require).
  *
- * The official @deepseek-ai/dsh-client-ui-conversation@0.1.1-rc.2 bundle
+ * The official @deepseek-ai/dsh-client-ui-conversation@0.1.2-alpha.2 bundle
  * does NOT declare the `conversation.context.actions` slot on its
  * ContextMeter panel (verified against the published artifact and the
  * deepseek-harness source), so this plugin registers into a slot that
