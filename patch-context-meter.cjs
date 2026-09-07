@@ -2,7 +2,7 @@
  * Platform patch shipped with dsh-compact-button (pure module — no side
  * effects on require).
  *
- * The official @deepseek-ai/dsh-client-ui-conversation@0.1.2-alpha.2 bundle
+ * The official @deepseek-ai/dsh-client-ui-conversation@0.1.2-rc.1 bundle
  * does NOT declare the `conversation.context.actions` slot on its
  * ContextMeter panel (verified against the published artifact and the
  * deepseek-harness source), so this plugin registers into a slot that
@@ -40,8 +40,8 @@ const TARGET_REL = path.join('node_modules', '@deepseek-ai', 'dsh-client-ui-conv
 /** Marker present only after replacement 3 has been applied. */
 const PATCHED_MARKER = 'renderSlot("conversation.context.actions"';
 
-/** The replacements, applied in order. Tab-indented to match the rc2 bundle
- *  layout exactly — any upstream formatting drift trips the match-count
+/** The replacements, applied in order. Tab-indented to match the 0.1.2-rc.1
+ *  bundle layout exactly — any upstream formatting drift trips the match-count
  *  assertion instead of producing a half-patched file. */
 const REPLACEMENTS = [
   {
@@ -71,8 +71,8 @@ const REPLACEMENTS = [
   },
   {
     label: 'composer.bar children table',
-    old: '\t\t\t\t\t"conversation.input.model": {\n\t\t\t\t\t\tkind: "single",\n\t\t\t\t\t\tscope: "session"\n\t\t\t\t\t}\n\t\t\t\t},',
-    replacement: '\t\t\t\t\t"conversation.input.model": {\n\t\t\t\t\t\tkind: "single",\n\t\t\t\t\t\tscope: "session"\n\t\t\t\t\t},\n' +
+    old: '\t\t\t\t\t"conversation.composer.dock": {\n\t\t\t\t\t\tkind: "list",\n\t\t\t\t\t\tscope: "session"\n\t\t\t\t\t}\n\t\t\t\t},',
+    replacement: '\t\t\t\t\t"conversation.composer.dock": {\n\t\t\t\t\t\tkind: "list",\n\t\t\t\t\t\tscope: "session"\n\t\t\t\t\t},\n' +
       '\t\t\t\t\t"conversation.context.actions": {\n\t\t\t\t\t\tkind: "list",\n\t\t\t\t\t\tscope: "session-maybe"\n\t\t\t\t\t}\n' +
       '\t\t\t\t},',
   },

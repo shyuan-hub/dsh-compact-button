@@ -1,6 +1,6 @@
 {
   "name": "dsh-compact-button",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "DSH web plugin: adds a one-click Compact button and a New Session button to the conversation context meter panel. Compact submits /compact to summarize older history; New Session starts a fresh session in the same workspace (agent preset and permission settings follow the deployment default).",
   "type": "module",
   "publishConfig": {
@@ -57,10 +57,10 @@
   "license": "MIT",
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.2",
-    "@deepseek-ai/dsh-api-session-controller": "~0.1.2-alpha.2",
-    "@deepseek-ai/dsh-client-locale": "~0.1.2-alpha.2",
-    "@deepseek-ai/dsh-client-ui-renderer": "~0.1.2-alpha.2",
-    "@deepseek-ai/dsh-client-ui-workspace": "~0.1.2-alpha.2",
+    "@deepseek-ai/dsh-api-session-controller": "~0.1.2-rc.1",
+    "@deepseek-ai/dsh-client-locale": "~0.1.2-rc.1",
+    "@deepseek-ai/dsh-client-ui-renderer": "~0.1.2-rc.1",
+    "@deepseek-ai/dsh-client-ui-workspace": "~0.1.2-rc.1",
     "cordis": "^4.0.0",
     "react": "^18.2.0"
   },
@@ -71,10 +71,10 @@
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "^4.0.2",
-    "@deepseek-ai/dsh-api-session-controller": "0.1.2-alpha.2",
-    "@deepseek-ai/dsh-client-locale": "0.1.2-alpha.2",
-    "@deepseek-ai/dsh-client-ui-renderer": "0.1.2-alpha.2",
-    "@deepseek-ai/dsh-client-ui-workspace": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-api-session-controller": "0.1.2-rc.1",
+    "@deepseek-ai/dsh-client-locale": "0.1.2-rc.1",
+    "@deepseek-ai/dsh-client-ui-renderer": "0.1.2-rc.1",
+    "@deepseek-ai/dsh-client-ui-workspace": "0.1.2-rc.1",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.2",
