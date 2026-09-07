@@ -1,13 +1,13 @@
 /**
  * The New Session button rendered next to the Compact button in the
  * conversation context meter panel (the same `conversation.context.actions`
- * slot). One click asks the client `workspaces` runtime to start a fresh
- * Session in the current Session's Workspace — the runtime resolves the
+ * slot). One click asks the client `uiWorkspace` service to start a fresh
+ * Session in the current Session's Workspace — uiWorkspace resolves the
  * Workspace, connects (or creates) a blank Session there, and navigates to
  * it — so the new Session shares the previous one's Workspace and inherits
  * the same deployment-level agent preset and permission policy. The action is
  * synchronous from the caller's viewpoint (the connect/open RPCs run
- * fire-and-forget inside the runtime), so the button only guards against a
+ * fire-and-forget inside the service), so the button only guards against a
  * rapid double-click with a short lockout rather than a phase machine.
  */
 import { useEffect, useRef, useState } from 'react'
