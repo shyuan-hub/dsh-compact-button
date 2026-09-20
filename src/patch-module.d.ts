@@ -1,6 +1,6 @@
 /**
  * Structural types for ../patch-context-meter.cjs — a plain CJS module the
- * host half bundles inline (it must stay CJS so the postinstall hook can
+ * host half bundles inline (it must stay CJS so the manual CLI can
  * `node patch-run.cjs` it without any build step). Wildcard ambient
  * declaration: the project imports no other .cjs modules.
  */
@@ -10,13 +10,19 @@ declare module '*.cjs' {
     status: 'patched' | 'already' | 'drift' | 'error'
     /** Absolute path of the ui-conversation lib/client.js considered. */
     file: string
-    /** Drift: which replacement failed its exactly-one-match assertion. */
+    /** Detected platform package version (undefined when unreadable). */
+    version?: string
+    /** Whether that version is in the tested set (documentation only). */
+    tested?: boolean
+    /** Drift: which anchor failed its exactly-one-match assertion. */
     label?: string
-    /** Drift: how many times that replacement matched (expected 1). */
+    /** Drift: how many times that anchor matched (expected 1). */
     count?: number
     /** Error: the caught read/write failure. */
     error?: unknown
   }
   /** Discover installed ui-conversation bundles and patch each in place. */
   export function patchInstalledTargets(startDirs?: string[]): PatchResult[]
+  /** One human-readable line describing a patch outcome. */
+  export function describeResult(result: PatchResult): string
 }
