@@ -15,11 +15,11 @@
 </div>
 
 <div align="center">
-  <img alt="dsh-compact-button 在上下文计量面板中的效果" src="doc/assets/screenshot.png" />
+  <img alt="dsh-compact-button 在上下文计量面板中的效果" src="https://raw.githubusercontent.com/shyuan-hub/dsh-compact-button/HEAD/doc/assets/screenshot.png" />
   <br />
   <i>输入框（composer）旁的上下文圆环展开后就是「上下文计量面板」，按钮就在里面</i>
   <br /><br />
-  <img alt="dsh-compact-button 动态演示：一键压缩上下文与新建会话" src="doc/assets/screencap.gif" />
+  <img alt="dsh-compact-button 动态演示：一键压缩上下文与新建会话" src="https://raw.githubusercontent.com/shyuan-hub/dsh-compact-button/HEAD/doc/assets/screencap.gif" />
   <br />
   <i>动态演示：点击「压缩上下文」提交 /compact，点击「新建会话」在同一 workspace 开启新会话</i>
 </div>

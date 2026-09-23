@@ -15,11 +15,11 @@
 </div>
 
 <div align="center">
-  <img alt="dsh-compact-button in the context meter panel" src="doc/assets/screenshot.png" />
+  <img alt="dsh-compact-button in the context meter panel" src="https://raw.githubusercontent.com/shyuan-hub/dsh-compact-button/HEAD/doc/assets/screenshot.png" />
   <br />
   <i>The context ring next to the composer expands into the context meter panel — the buttons live inside it</i>
   <br /><br />
-  <img alt="dsh-compact-button demo: one-click context compaction and new session" src="doc/assets/screencap.gif" />
+  <img alt="dsh-compact-button demo: one-click context compaction and new session" src="https://raw.githubusercontent.com/shyuan-hub/dsh-compact-button/HEAD/doc/assets/screencap.gif" />
   <br />
   <i>Demo: click Compact context to submit /compact, click New session to start a new session in the same workspace</i>
 </div>
