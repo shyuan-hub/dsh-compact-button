@@ -89,7 +89,7 @@ dsh plugin --profile web add "file:<你的本地目录>/dsh-compact-button-0.2.0
 
 > 🔩 **平台补丁（自动应用）**：官方 `@deepseek-ai/dsh-client-ui-conversation` 并未声明 `conversation.context.actions` 槽位。本插件自带补丁脚本（[`patch-context-meter.cjs`](./patch-context-meter.cjs)），在**每次 `dsh web` 启动时**（host 半边）自动定位已安装的平台 bundle 并就地注入该槽位的声明与渲染。补丁幂等、逐条断言命中；命中异常则安全中止（不改动平台文件），此时按钮不渲染，插件其余部分不受影响。本包**不含任何安装脚本**（不依赖 postinstall，任何包管理器安装都不会报错或被拦截）；如需在启动前提前打好补丁，可手动执行 `node node_modules/dsh-compact-button/patch-run.cjs`。
 
-> 🔗 **不跟 DSH 发版走**：本包**不声明任何 DSH peer 依赖**，补丁锚点也是**格式无关的正则语义锚**（缩进、引号、`var/let/const`、css module 哈希、jsx helper 改名都不影响命中）。所以 DSH 出新版本时**不需要改本插件的版本号或依赖范围**——只要 ContextMeter 结构不变就自动适配；结构真变了也只是「按钮不渲染 + 一条明确日志」，不会污染平台文件。启动日志会打印检测到的平台版本，未测过的版本会额外标注 `(not in the tested set)`。已验证：`0.1.2-rc.1`、`0.1.5-rc.1`、`0.1.5-rc.2`。
+> 🔗 **不跟 DSH 发版走**：本包**不声明任何 DSH peer 依赖**，补丁锚点也是**格式无关的正则语义锚**（缩进、引号、`var/let/const`、css module 哈希、jsx helper 改名都不影响命中）。所以 DSH 出新版本时**不需要改本插件的版本号或依赖范围**——只要 ContextMeter 结构不变就自动适配；结构真变了也只是「按钮不渲染 + 一条明确日志」，不会污染平台文件。启动日志会打印检测到的平台版本，未测过的版本会额外标注 `(not in the tested set)`。已验证：`0.1.2-rc.1`、`0.1.5-rc.1`、`0.1.5-rc.2`、`0.1.5-rc.3`、`0.1.7-alpha.2`。
 
 ## 🖱️ 按钮怎么用
 

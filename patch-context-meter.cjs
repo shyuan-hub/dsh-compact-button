@@ -51,7 +51,7 @@ const TARGET_REL = path.join('node_modules', '@deepseek-ai', 'dsh-client-ui-conv
 
 /** Platform releases this plugin has been exercised against (documentation
  *  only — drives the startup log, never gates the patch). */
-const TESTED_PLATFORMS = ['0.1.2-rc.1', '0.1.5-rc.1', '0.1.5-rc.2'];
+const TESTED_PLATFORMS = ['0.1.2-rc.1', '0.1.5-rc.1', '0.1.5-rc.2', '0.1.5-rc.3', '0.1.7-alpha.2'];
 
 /** Marker present only after replacement 3 has been applied. */
 const PATCHED_MARKER = 'renderSlot("conversation.context.actions"';
