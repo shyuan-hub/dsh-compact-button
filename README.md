@@ -1,5 +1,7 @@
 # dsh-compact-button
 
+[**简体中文**](./README.md) | [English](./README.en.md)
+
 <!-- Hero -->
 <div align="center">
   <b style="font-size: 1.15em;">上下文快满了？点一下，把早期对话压缩成摘要</b><br /><br />
@@ -10,7 +12,6 @@
   <img alt="一键压缩上下文" src="https://img.shields.io/badge/-一键压缩上下文-4d6bfe" /> <img alt="一键新建会话" src="https://img.shields.io/badge/-一键新建会话-4d6bfe" /> <img alt="与 /compact 同通道" src="https://img.shields.io/badge/-%E4%B8%8E%20%2Fcompact%20同通道-4d6bfe" /> <img alt="中英文实时切换" src="https://img.shields.io/badge/-中英文实时切换-4d6bfe" /><br /><br />
   在 DSH Web 的<b>上下文计量面板</b>里放两个按钮：「压缩上下文」点击即向当前会话提交 <code>/compact</code>，<br />
   把较早的对话历史压缩成摘要；「新建会话」点击即在<b>同一 workspace</b> 中开启一个新会话。<br />
-  <i>English: a one-click <b>Compact context</b> button and a <b>New session</b> button for the DSH Web context meter panel.</i>
 </div>
 
 <div align="center">
@@ -58,10 +59,10 @@ dsh plugin --profile web add dsh-compact-button@latest
 # 1. 构建并打包
 git clone https://github.com/shyuan-hub/dsh-compact-button.git && cd dsh-compact-button
 pnpm install && pnpm build
-pnpm pack                                # 生成 dsh-compact-button-0.2.0.tgz
+pnpm pack                                # 生成 dsh-compact-button-<版本号>.tgz
 
 # 2. 通过 dsh plugin 一键安装（file: 通道）
-dsh plugin --profile web add "file:<你的本地目录>/dsh-compact-button-0.2.0.tgz"
+dsh plugin --profile web add "file:<你的本地目录>/dsh-compact-button-<版本号>.tgz"
 ```
 
 </details>

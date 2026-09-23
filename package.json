@@ -45,6 +45,7 @@
     "dsh.plugin.json",
     "cordis.patch.yml",
     "README.md",
+    "README.en.md",
     "LICENSE"
   ],
   "scripts": {
