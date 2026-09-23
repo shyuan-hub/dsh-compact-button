@@ -1,24 +1,25 @@
 # dsh-compact-button
 
+[**简体中文**](./README.md) | [English](./README.en.md)
+
 <!-- Hero -->
 <div align="center">
   <b style="font-size: 1.15em;">上下文快满了？点一下，把早期对话压缩成摘要</b><br /><br />
   <a href="https://www.npmjs.com/package/dsh-compact-button"><img alt="npm version" src="https://img.shields.io/npm/v/dsh-compact-button" /></a>
   <a href="https://github.com/shyuan-hub/dsh-compact-button/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/shyuan-hub/dsh-compact-button" /></a>
   <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg" /></a>
-  <a href="https://www.npmjs.com/package/@deepseek-ai/dsh?activeTab=versions"><img alt="适配 DSH 版本：0.1.2-rc.1" src="https://img.shields.io/badge/DSH-0.1.2--rc.1-4d6bfe" /></a><br /><br />
+  <a href="https://www.npmjs.com/package/@deepseek-ai/dsh?activeTab=versions"><img alt="DSH 版本无关（补丁自适应）" src="https://img.shields.io/badge/DSH-version--agnostic-4d6bfe" /></a><br /><br />
   <img alt="一键压缩上下文" src="https://img.shields.io/badge/-一键压缩上下文-4d6bfe" /> <img alt="一键新建会话" src="https://img.shields.io/badge/-一键新建会话-4d6bfe" /> <img alt="与 /compact 同通道" src="https://img.shields.io/badge/-%E4%B8%8E%20%2Fcompact%20同通道-4d6bfe" /> <img alt="中英文实时切换" src="https://img.shields.io/badge/-中英文实时切换-4d6bfe" /><br /><br />
   在 DSH Web 的<b>上下文计量面板</b>里放两个按钮：「压缩上下文」点击即向当前会话提交 <code>/compact</code>，<br />
   把较早的对话历史压缩成摘要；「新建会话」点击即在<b>同一 workspace</b> 中开启一个新会话。<br />
-  <i>English: a one-click <b>Compact context</b> button and a <b>New session</b> button for the DSH Web context meter panel.</i>
 </div>
 
 <div align="center">
-  <img alt="dsh-compact-button 在上下文计量面板中的效果" src="doc/assets/screenshot.png" />
+  <img alt="dsh-compact-button 在上下文计量面板中的效果" src="https://raw.githubusercontent.com/shyuan-hub/dsh-compact-button/HEAD/doc/assets/screenshot.png" />
   <br />
   <i>输入框（composer）旁的上下文圆环展开后就是「上下文计量面板」，按钮就在里面</i>
   <br /><br />
-  <img alt="dsh-compact-button 动态演示：一键压缩上下文与新建会话" src="doc/assets/screencap.gif" />
+  <img alt="dsh-compact-button 动态演示：一键压缩上下文与新建会话" src="https://raw.githubusercontent.com/shyuan-hub/dsh-compact-button/HEAD/doc/assets/screencap.gif" />
   <br />
   <i>动态演示：点击「压缩上下文」提交 /compact，点击「新建会话」在同一 workspace 开启新会话</i>
 </div>
@@ -58,10 +59,10 @@ dsh plugin --profile web add dsh-compact-button@latest
 # 1. 构建并打包
 git clone https://github.com/shyuan-hub/dsh-compact-button.git && cd dsh-compact-button
 pnpm install && pnpm build
-pnpm pack                                # 生成 dsh-compact-button-0.2.0.tgz
+pnpm pack                                # 生成 dsh-compact-button-<版本号>.tgz
 
 # 2. 通过 dsh plugin 一键安装（file: 通道）
-dsh plugin --profile web add "file:<你的本地目录>/dsh-compact-button-0.2.0.tgz"
+dsh plugin --profile web add "file:<你的本地目录>/dsh-compact-button-<版本号>.tgz"
 ```
 
 </details>
@@ -81,13 +82,15 @@ dsh plugin --profile web add "file:<你的本地目录>/dsh-compact-button-0.2.0
 
 | 现象 | 原因与解决 |
 |---|---|
-| 面板里**看不到按钮** | 按钮依赖 `conversation.context.actions` 子槽位，官方 DSH（含 0.1.2-rc.1）并未声明它，由本插件**自动应用的平台补丁**注入（每次 `dsh web` 启动时由 host 半边自愈）。检查 dsh 启动日志有无 `[dsh-compact-button patch] ... drifted/skipped` 警告；若平台 bundle 版本漂移（非 0.1.2-rc.1），补丁会安全中止，需等上游支持该槽位。 |
+| 面板里**看不到按钮** | 按钮依赖 `conversation.context.actions` 子槽位，官方 DSH 并未声明它，由本插件**自动应用的平台补丁**注入（每次 `dsh web` 启动时由 host 半边自愈）。看 dsh 启动日志：`[dsh-compact-button] platform patch applied: ... @<版本>` 表示已注入；`platform patch skipped ... "<锚点>" matched N time(s)` 表示上游 ContextMeter 结构变化过大，补丁安全中止（不改动平台文件），此时按钮不渲染，插件其余部分不受影响。 |
 | 点击后显示「命令未匹配」 | 当前 composer 没有可提交命令的会话。切换到有活跃会话的页面再试。 |
 | 安装 / 改动后没生效 | 本插件需要**重启 `dsh web`** 才能生效（仅硬刷新浏览器不够），重启后再硬刷新页面。 |
 
 </details>
 
-> 🔩 **平台补丁（自动应用）**：官方 `@deepseek-ai/dsh-client-ui-conversation@0.1.2-rc.1` 并未声明 `conversation.context.actions` 槽位。本插件自带补丁脚本（`patch-context-meter.cjs`），在**每次 `dsh web` 启动时**（host 半边）自动定位已安装的平台 bundle 并就地注入该槽位的声明与渲染。补丁幂等、逐条断言匹配；若平台版本漂移则安全中止（不改动平台文件），此时按钮不渲染，插件其余部分不受影响。本包**不含任何安装脚本**（不依赖 postinstall，任何包管理器安装都不会报错或被拦截）；如需在启动前提前打好补丁，可手动执行 `node node_modules/dsh-compact-button/patch-run.cjs`。
+> 🔩 **平台补丁（自动应用）**：官方 `@deepseek-ai/dsh-client-ui-conversation` 并未声明 `conversation.context.actions` 槽位。本插件自带补丁脚本（[`patch-context-meter.cjs`](./patch-context-meter.cjs)），在**每次 `dsh web` 启动时**（host 半边）自动定位已安装的平台 bundle 并就地注入该槽位的声明与渲染。补丁幂等、逐条断言命中；命中异常则安全中止（不改动平台文件），此时按钮不渲染，插件其余部分不受影响。本包**不含任何安装脚本**（不依赖 postinstall，任何包管理器安装都不会报错或被拦截）；如需在启动前提前打好补丁，可手动执行 `node node_modules/dsh-compact-button/patch-run.cjs`。
+
+> 🔗 **不跟 DSH 发版走**：本包**不声明任何 DSH peer 依赖**，补丁锚点也是**格式无关的正则语义锚**（缩进、引号、`var/let/const`、css module 哈希、jsx helper 改名都不影响命中）。所以 DSH 出新版本时**不需要改本插件的版本号或依赖范围**——只要 ContextMeter 结构不变就自动适配；结构真变了也只是「按钮不渲染 + 一条明确日志」，不会污染平台文件。启动日志会打印检测到的平台版本，未测过的版本会额外标注 `(not in the tested set)`。已验证：`0.1.2-rc.1`、`0.1.5-rc.1`、`0.1.5-rc.2`、`0.1.5-rc.3`、`0.1.7-alpha.2`。
 
 ## 🖱️ 按钮怎么用
 
@@ -140,9 +143,24 @@ pnpm watch        # tsdown --watch
 
 **架构**：单 npm 包、host/client 双半结构——host（`src/index.ts`）为空 apply；client（`src/client/index.tsx`）注册 `CompactButton` 到槽位并处理状态流转与 i18n。插件按 DSH 官方规范组织（无 default 导出、双 client bundle），运行期不依赖 npm / checkout（`@deepseek-ai/*` 由 web profile 提供）。
 
+### 版本兼容策略（为何不需要跟着 DSH 发版改代码）
+
+1. **不声明 DSH peer 依赖**。插件运行期不 `import` 任何平台包（client bundle 只 `require("react")`，host 半边只用 `node:*`），服务全靠 cordis 注入。因此 `package.json` 里没有 `@deepseek-ai/dsh-*` 的 peer/dev 版本锁——包管理器也不会为了满足一个范围而拉出第二份 renderer（slot registry 双实例会直接破坏槽位注册）。
+2. **补丁锚点是语义正则，不是源码字面量**。`patch-context-meter.cjs` 的每条锚点容忍缩进、引号、`var/let/const`、css module 哈希（前缀从 `bar` 条目现场捕获，从不写死）与 jsx helper 改名；单测里用 `DRIFT_TRANSFORMS` 逐项回归。
+3. **断言 + 降级代替版本号卡关**。每条锚点仍要求“命中恰好 1 次”，否则整体不写入。兼容性由结构决定，而不是由 semver 范围决定。
+4. **`TESTED_PLATFORMS` 只是文档**。它只驱动启动日志里的 `(not in the tested set)` 提示，从不卡补丁。DSH 出新版本时什么都不用改，启动一次看日志即可；确认适配后把新版本号追加到 `TESTED_PLATFORMS`（可选）。
+
+验证一个新 DSH 版本（无需改代码）：
+
+```sh
+node -e "const p=require('./patch-context-meter.cjs'),fs=require('fs');console.log(p.patchSource(fs.readFileSync('<path>/lib/client.js','utf8')).status)"
+# 期望 patched；drift 时会告知哪条锚点、命中几次
+```
+
 ## ⚠️ 已知限制
 
-- 依赖 `conversation.context.actions` 子槽位：官方平台（含 0.1.2-rc.1）未声明，由本插件自动应用的平台补丁注入；平台版本漂移（补丁断言失败）时安全中止，按钮不渲染
+- 依赖 `conversation.context.actions` 子槽位：官方平台未声明，由本插件自动应用的平台补丁注入；补丁锚点为格式无关的正则语义锚，仅在**上游 ContextMeter 结构发生实质变化**时失效（安全中止、不改动平台文件、按钮不渲染）
+- 补丁只作用于 `@deepseek-ai/dsh-client-ui-conversation` 的 `lib/client.js`：若上游把该 bundle 拆分/改名，`findTargetFiles` 会找不到目标，需要跟进调整
 - 压缩按钮只负责提交 `/compact`，压缩的接纳与执行语义由 Host 侧 command-compact 插件拥有
 - 状态提示 4 秒后自动复位，不提供压缩进度展示
 - 新建会话按钮在同一 workspace 中开启新会话，但**沿用部署默认的 agent 预设与权限设置**；若当前会话用的是非默认预设，新会话不会自动沿用（client 侧 `uiWorkspace.startSession` 不暴露预设/权限选择）
