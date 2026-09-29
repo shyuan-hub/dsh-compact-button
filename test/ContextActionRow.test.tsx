@@ -36,8 +36,8 @@ describe('layout', () => {
       () => Promise.resolve(true),
       () => {},
     )
-    expect(compact).toHaveTextContent(en.label)
-    expect(newSession).toHaveTextContent(en.newSession)
+    expect(compact).toHaveAttribute('aria-label', en.label)
+    expect(newSession).toHaveAttribute('aria-label', en.newSession)
   })
 })
 
@@ -79,9 +79,9 @@ describe('translations', () => {
   it('forwards the framework t prop to both children', async () => {
     const t = (key: string) => `[${key}]`
     const [compact, newSession] = await renderRow(() => Promise.resolve(true), () => {}, t)
-    expect(compact).toHaveTextContent('[label]')
-    expect(compact).toHaveAttribute('title', '[tooltip]')
-    expect(newSession).toHaveTextContent('[newSession]')
-    expect(newSession).toHaveAttribute('title', '[newSessionTooltip]')
+    expect(compact).toHaveAttribute('aria-label', '[label]')
+    expect(compact).toHaveAttribute('title', '[label]')
+    expect(newSession).toHaveAttribute('aria-label', '[newSession]')
+    expect(newSession).toHaveAttribute('title', '[newSession]')
   })
 })

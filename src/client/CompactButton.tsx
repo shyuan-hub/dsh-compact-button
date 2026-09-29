@@ -1,13 +1,15 @@
 /**
- * The Compact button rendered in the conversation context meter panel (the
- * `conversation.context.actions` slot the platform declares on the
- * ContextMeter). One click submits the `/compact` slash command to the
- * session's agent through the existing command seam (admission only — the
- * compaction outcome renders as the command row in the chat, exactly like a
- * typed `/compact`). The button surfaces the local phases: idle → pending
- * (admission in flight) → submitted / rejected / failed, resetting to idle
- * after a short window so the panel stays clean.
+ * The Compact action in the composer dock row: an icon-only button that
+ * matches the ContextMeter ring next to it. One click submits the
+ * `/compact` slash command to the session's agent through the existing
+ * command seam (admission only — the compaction outcome renders as the
+ * command row in the chat, exactly like a typed `/compact`). Because the
+ * button carries no text, the phase machine drives two channels instead: the
+ * platform Tooltip label (idle reads “压缩上下文”, settled phases report
+ * the outcome) and the glyph colour. Hovering at any time tells you both
+ * what the button does and what the last click did.
  */
+import { Tooltip } from '@deepseek-ai/dsh-client-ui-primitives'
 import { useEffect, useRef, useState } from 'react'
 import { t as tFallback, type CopyKey } from './locales.ts'
 import css from './compact-button.module.css'
@@ -17,6 +19,15 @@ type Phase = 'idle' | 'pending' | 'submitted' | 'rejected' | 'failed'
 
 /** How long a settled phase stays visible before returning to idle. */
 const SETTLED_VISIBLE_MS = 4000
+
+/** Which copy key each phase reads out (tooltip + aria-label). */
+const PHASE_KEY: Record<Phase, CopyKey> = {
+  idle: 'label',
+  pending: 'pending',
+  submitted: 'submitted',
+  rejected: 'rejected',
+  failed: 'failed',
+}
 
 /** The compress glyph: two arrows pointing toward the center. */
 function CompressIcon() {
@@ -78,28 +89,27 @@ export function CompactButton({ compact, t }: CompactButtonProps) {
   // compositions without the locale seat.
   const copy = t ?? ((key: string) => tFallback(key as CopyKey))
 
-  const label = phase === 'pending' ? copy('pending')
-    : phase === 'submitted' ? copy('submitted')
-    : phase === 'rejected' ? copy('rejected')
-    : phase === 'failed' ? copy('failed')
-    : copy('label')
+  // One string serves the tooltip bubble and the accessible name, so a
+  // screen reader and a hover agree about what the glyph means right now.
+  const label = copy(PHASE_KEY[phase])
 
-  const modifier = phase === 'pending' ? css.buttonPending
-    : phase === 'submitted' ? css.buttonSubmitted
-    : phase === 'failed' ? css.buttonFailed
+  const modifier = phase === 'pending' ? css.iconPending
+    : phase === 'submitted' ? css.iconSubmitted
+    : phase === 'failed' ? css.iconFailed
     : ''
 
   return (
-    <button
-      type="button"
-      className={`${css.button} ${modifier}`.trim()}
-      aria-busy={phase === 'pending' || undefined}
-      disabled={phase === 'pending'}
-      title={copy('tooltip')}
-      onClick={onClick}
-    >
-      <span className={css.buttonIcon}><CompressIcon /></span>
-      <span>{label}</span>
-    </button>
+    <Tooltip label={label} side="top" delayMs={200}>
+      <button
+        type="button"
+        className={`${css.iconButton} ${modifier}`.trim()}
+        aria-label={label}
+        aria-busy={phase === 'pending' || undefined}
+        disabled={phase === 'pending'}
+        onClick={onClick}
+      >
+        <CompressIcon />
+      </button>
+    </Tooltip>
   )
 }

@@ -47,10 +47,10 @@ afterEach(() => {
 })
 
 describe('idle', () => {
-  it('renders the fallback (browser-language) label and tooltip', async () => {
+  it('renders the fallback (browser-language) label as tooltip and accessible name', async () => {
     const button = await renderButton(() => Promise.resolve(true))
-    expect(button).toHaveTextContent(en.label)
-    expect(button).toHaveAttribute('title', en.tooltip)
+    expect(button).toHaveAttribute('aria-label', en.label)
+    expect(button).toHaveAttribute('title', en.label)
     expect(button).not.toBeDisabled()
     expect(button).not.toHaveAttribute('aria-busy')
   })
@@ -58,8 +58,14 @@ describe('idle', () => {
   it('prefers the framework t prop over the fallback', async () => {
     const t = (key: string) => `[${key}]`
     const button = await renderButton(() => Promise.resolve(true), t)
-    expect(button).toHaveTextContent('[label]')
-    expect(button).toHaveAttribute('title', '[tooltip]')
+    expect(button).toHaveAttribute('aria-label', '[label]')
+    expect(button).toHaveAttribute('title', '[label]')
+  })
+
+  it('carries no text node — the glyph is the only content', async () => {
+    const button = await renderButton(() => Promise.resolve(true))
+    expect(button).toHaveTextContent('')
+    expect(button.querySelector('svg')).not.toBeNull()
   })
 })
 
@@ -69,7 +75,7 @@ describe('pending', () => {
     const button = await renderButton(() => pending.promise)
     await clickAndFlush(button)
 
-    expect(button).toHaveTextContent(en.pending)
+    expect(button).toHaveAttribute('aria-label', en.pending)
     expect(button).toBeDisabled()
     expect(button).toHaveAttribute('aria-busy', 'true')
   })
@@ -89,31 +95,31 @@ describe('settled phases', () => {
   it('shows submitted when the command was matched', async () => {
     const button = await renderButton(() => Promise.resolve(true))
     await clickAndFlush(button)
-    expect(button).toHaveTextContent(en.submitted)
+    expect(button).toHaveAttribute('aria-label', en.submitted)
     expect(button).not.toBeDisabled()
   })
 
   it('shows rejected when the command was not matched', async () => {
     const button = await renderButton(() => Promise.resolve(false))
     await clickAndFlush(button)
-    expect(button).toHaveTextContent(en.rejected)
+    expect(button).toHaveAttribute('aria-label', en.rejected)
   })
 
   it('shows failed when the admission rejects', async () => {
     const button = await renderButton(() => Promise.reject(new Error('transport down')))
     await clickAndFlush(button)
-    expect(button).toHaveTextContent(en.failed)
+    expect(button).toHaveAttribute('aria-label', en.failed)
   })
 
   it('returns to idle after the settled-visible window', async () => {
     const button = await renderButton(() => Promise.resolve(true))
     await clickAndFlush(button)
-    expect(button).toHaveTextContent(en.submitted)
+    expect(button).toHaveAttribute('aria-label', en.submitted)
 
     await act(async () => {
       vi.advanceTimersByTime(SETTLED_VISIBLE_MS)
     })
-    expect(button).toHaveTextContent(en.label)
+    expect(button).toHaveAttribute('aria-label', en.label)
     expect(button).not.toBeDisabled()
   })
 
@@ -131,12 +137,12 @@ describe('settled phases', () => {
     await act(async () => {
       vi.advanceTimersByTime(SETTLED_VISIBLE_MS / 2 + 1)
     })
-    expect(button).toHaveTextContent(en.submitted)
+    expect(button).toHaveAttribute('aria-label', en.submitted)
 
     await act(async () => {
       vi.advanceTimersByTime(SETTLED_VISIBLE_MS / 2)
     })
-    expect(button).toHaveTextContent(en.label)
+    expect(button).toHaveAttribute('aria-label', en.label)
   })
 })
 

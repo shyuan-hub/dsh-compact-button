@@ -1,15 +1,17 @@
 /**
- * The New Session button rendered next to the Compact button in the
- * conversation context meter panel (the same `conversation.context.actions`
- * slot). One click asks the client `uiWorkspace` service to start a fresh
- * Session in the current Session's Workspace — uiWorkspace resolves the
- * Workspace, connects (or creates) a blank Session there, and navigates to
- * it — so the new Session shares the previous one's Workspace and inherits
- * the same deployment-level agent preset and permission policy. The action is
- * synchronous from the caller's viewpoint (the connect/open RPCs run
- * fire-and-forget inside the service), so the button only guards against a
- * rapid double-click with a short lockout rather than a phase machine.
+ * The New Session action in the composer dock row: an icon-only button that
+ * matches the ContextMeter ring. One click asks the client `uiWorkspace`
+ * service to start a fresh Session in the current Session's Workspace —
+ * uiWorkspace resolves the Workspace, connects (or creates) a blank Session
+ * there, and navigates to it — so the new Session shares the previous one's
+ * Workspace and inherits the same deployment-level agent preset and
+ * permission policy. The action is synchronous from the caller's viewpoint
+ * (the connect/open RPCs run fire-and-forget inside the service), so the
+ * button only guards against a rapid double-click with a short lockout
+ * rather than a phase machine. With no text on the glyph, the platform
+ * Tooltip carries the “新建会话” label.
  */
+import { Tooltip } from '@deepseek-ai/dsh-client-ui-primitives'
 import { useEffect, useRef, useState } from 'react'
 import { t as tFallback, type CopyKey } from './locales.ts'
 import css from './compact-button.module.css'
@@ -65,18 +67,19 @@ export function NewSessionButton({ newSession, t }: NewSessionButtonProps) {
   // compositions without the locale seat.
   const copy = t ?? ((key: string) => tFallback(key as CopyKey))
 
+  const label = copy('newSession')
+
   return (
-    <button
-      type="button"
-      className={css.button}
-      disabled={locked}
-      title={copy('newSessionTooltip')}
-      onClick={onClick}
-    >
-      <span className={css.buttonIcon}>
+    <Tooltip label={label} side="top" delayMs={200}>
+      <button
+        type="button"
+        className={css.iconButton}
+        aria-label={label}
+        disabled={locked}
+        onClick={onClick}
+      >
         <NewSessionIcon />
-      </span>
-      <span>{copy('newSession')}</span>
-    </button>
+      </button>
+    </Tooltip>
   )
 }
