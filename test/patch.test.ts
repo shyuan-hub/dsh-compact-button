@@ -12,8 +12,8 @@
  */
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { homedir, tmpdir } from 'node:os'
+import { join, resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 const require = createRequire(import.meta.url)
@@ -28,6 +28,9 @@ interface PatchApi {
   REPLACEMENTS: Replacement[]
   PATCHED_MARKER: string
   TESTED_PLATFORMS: string[]
+  DSH_HOME_ENV: string
+  expandHomePath(p: string): string
+  resolveDshHome(env?: Record<string, string | undefined>): string
   patchSource(src: string):
     | { status: 'already' }
     | { status: 'drift'; label: string; count: number }
@@ -210,6 +213,28 @@ describe('patchFile', () => {
   })
 })
 
+describe('resolveDshHome', () => {
+  it('prefers a non-blank $DSH_HOME over the default ~/.dsh', () => {
+    const relocated = join(tmpdir(), 'dsh-cb-home-relocated')
+    expect(patch.resolveDshHome({ DSH_HOME: relocated })).toBe(resolve(relocated))
+    expect(patch.resolveDshHome({ DSH_HOME: relocated })).not.toBe(patch.resolveDshHome({}))
+  })
+
+  it('falls back to ~/.dsh when $DSH_HOME is unset or blank', () => {
+    const dflt = resolve(join(homedir(), '.dsh'))
+    expect(patch.resolveDshHome({})).toBe(dflt)
+    expect(patch.resolveDshHome({ DSH_HOME: '' })).toBe(dflt)
+    // A whitespace-only override counts as unset (mirrors the platform).
+    expect(patch.resolveDshHome({ DSH_HOME: '   ' })).toBe(dflt)
+  })
+
+  it('expands a leading ~ in $DSH_HOME', () => {
+    expect(patch.resolveDshHome({ DSH_HOME: '~/custom-dsh' })).toBe(resolve(join(homedir(), 'custom-dsh')))
+    expect(patch.expandHomePath('~')).toBe(homedir())
+    expect(patch.expandHomePath('/abs/path')).toBe('/abs/path')
+  })
+})
+
 describe('findTargetFiles', () => {
   it('climbs from a plugin dir to a shared node_modules above it', () => {
     const root = mkdtempSync(join(tmpdir(), 'dsh-cb-find-'))
@@ -223,6 +248,26 @@ describe('findTargetFiles', () => {
       // realpath accounts for darwin's /tmp -> /private/tmp symlink.
       expect(found).toContain(realpathSync(target))
     } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  })
+
+  it('finds the platform bundle under a relocated $DSH_HOME/profiles', () => {
+    // Regression for issue #4: a user who moved DSH_HOME off ~/.dsh must
+    // still have their platform bundle discovered by the host-half self-heal.
+    const root = mkdtempSync(join(tmpdir(), 'dsh-cb-dshhome-'))
+    const target = join(root, 'profiles', 'web', 'node_modules', '@deepseek-ai', 'dsh-client-ui-conversation', 'lib', 'client.js')
+    const prev = process.env.DSH_HOME
+    try {
+      mkdirSync(join(target, '..'), { recursive: true })
+      writeFileSync(target, '')
+      process.env.DSH_HOME = root
+      // Empty startDirs: only the $DSH_HOME profiles-root probe can find it.
+      const found = patch.findTargetFiles([])
+      expect(found).toContain(realpathSync(target))
+    } finally {
+      if (prev === undefined) delete process.env.DSH_HOME
+      else process.env.DSH_HOME = prev
       rmSync(root, { recursive: true, force: true })
     }
   })

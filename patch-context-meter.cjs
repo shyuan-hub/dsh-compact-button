@@ -51,7 +51,7 @@ const TARGET_REL = path.join('node_modules', '@deepseek-ai', 'dsh-client-ui-conv
 
 /** Platform releases this plugin has been exercised against (documentation
  *  only — drives the startup log, never gates the patch). */
-const TESTED_PLATFORMS = ['0.1.2-rc.1', '0.1.5-rc.1', '0.1.5-rc.2', '0.1.5-rc.3', '0.1.7-alpha.2'];
+const TESTED_PLATFORMS = ['0.1.2-rc.1', '0.1.5-rc.1', '0.1.5-rc.2', '0.1.5-rc.3', '0.1.7-alpha.2', '0.1.7-rc.1', '0.1.7-rc.2'];
 
 /** Marker present only after replacement 3 has been applied. */
 const PATCHED_MARKER = 'renderSlot("conversation.context.actions"';
@@ -149,6 +149,42 @@ function patchSource(src) {
 /** How far findTargetFiles climbs above each start directory. */
 const MAX_CLIMB = 12;
 
+/** Name of the env var that relocates the harness home off `~/.dsh`. */
+const DSH_HOME_ENV = 'DSH_HOME';
+
+/**
+ * Expand a leading `~` to the OS home directory (mirrors the platform's
+ * `expandHomePath`): `~` → home, `~/x` or `~\x` → home + `x`, anything
+ * else returned unchanged.
+ * @param p - the raw path value.
+ * @returns the expanded path.
+ */
+function expandHomePath(p) {
+  if (p === '~') return os.homedir();
+  if (p.startsWith('~/') || p.startsWith('~\\')) return path.join(os.homedir(), p.slice(2));
+  return p;
+}
+
+/**
+ * Resolve the effective DSH harness home, mirroring the platform's
+ * `resolveDshHome` precedence: a non-blank `$DSH_HOME` wins, otherwise the
+ * default `~/.dsh`. A whitespace-only `$DSH_HOME` counts as unset, so a
+ * blank override never relocates the home. The result is absolute.
+ *
+ * This is what lets the plugin follow a user who moved their harness home
+ * (e.g. `DSH_HOME=D:\AppData\DSH`): probing only `os.homedir()/.dsh` would
+ * miss the relocated `profiles` tree and the buttons would never render.
+ * @param env - environment mapping to read `DSH_HOME` from (default: process.env).
+ * @returns the normalized absolute harness home path.
+ */
+function resolveDshHome(env) {
+  const fromEnv = (env || process.env)[DSH_HOME_ENV];
+  const home = fromEnv !== undefined && fromEnv.trim().length > 0
+    ? fromEnv
+    : path.join(os.homedir(), '.dsh');
+  return path.resolve(expandHomePath(home));
+}
+
 /**
  * Locate installed ui-conversation client bundles.
  *
@@ -156,8 +192,9 @@ const MAX_CLIMB = 12;
  * 1. climb from each start directory and probe `<dir>/<TARGET_REL>` —
  *    covers the plugin sitting in a profile workspace next to (or above)
  *    the platform packages, npm flat layouts and pnpm .pnpm nests alike;
- * 2. probe the standard profile roots `~/.dsh/profiles` and
- *    `~/.dsh/profiles/<name>` — covers the host-half self-heal, where the
+ * 2. probe the harness profile roots `<dshHome>/profiles` and
+ *    `<dshHome>/profiles/<name>` (where `<dshHome>` honors `$DSH_HOME`,
+ *    falling back to `~/.dsh`) — covers the host-half self-heal, where the
  *    process cwd and the plugin's on-disk home tell us nothing.
  *
  * Symlinks are resolved so a pnpm/npm link writes the real store file.
@@ -176,13 +213,13 @@ function findTargetFiles(startDirs) {
       dir = parent;
     }
   }
-  const profilesRoot = path.join(os.homedir(), '.dsh', 'profiles');
+  const profilesRoot = path.join(resolveDshHome(), 'profiles');
   probes.push(path.join(profilesRoot, TARGET_REL));
   let names = [];
   try {
     names = fs.readdirSync(profilesRoot);
   } catch {
-    /* no ~/.dsh/profiles — standard roots simply yield nothing */
+    /* no <dshHome>/profiles — standard roots simply yield nothing */
   }
   for (const name of names) {
     probes.push(path.join(profilesRoot, name, TARGET_REL));
@@ -300,6 +337,9 @@ module.exports = {
   REPLACEMENTS,
   PATCHED_MARKER,
   TESTED_PLATFORMS,
+  DSH_HOME_ENV,
+  expandHomePath,
+  resolveDshHome,
   patchSource,
   countMatches,
   detectPlatformVersion,

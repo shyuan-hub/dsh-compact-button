@@ -25,4 +25,10 @@ declare module '*.cjs' {
   export function patchInstalledTargets(startDirs?: string[]): PatchResult[]
   /** One human-readable line describing a patch outcome. */
   export function describeResult(result: PatchResult): string
+  /** Name of the env var that relocates the harness home off `~/.dsh`. */
+  export const DSH_HOME_ENV: string
+  /** Expand a leading `~` to the OS home directory. */
+  export function expandHomePath(p: string): string
+  /** Resolve the effective DSH home: non-blank `$DSH_HOME` wins, else `~/.dsh`. */
+  export function resolveDshHome(env?: NodeJS.ProcessEnv): string
 }
