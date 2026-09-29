@@ -29,8 +29,11 @@ interface PatchApi {
   PATCHED_MARKER: string
   TESTED_PLATFORMS: string[]
   DSH_HOME_ENV: string
+  defaultDshHome(): string
   expandHomePath(p: string): string
-  resolveDshHome(env?: Record<string, string | undefined>): string
+  resolveDshHome(configured?: string | Record<string, string | undefined>, env?: Record<string, string | undefined>): string
+  dshHomesToProbe(configured?: string, env?: Record<string, string | undefined>): string[]
+  parseCliArgs(argv?: string[]): { configuredHome?: string }
   patchSource(src: string):
     | { status: 'already' }
     | { status: 'drift'; label: string; count: number }
@@ -40,7 +43,9 @@ interface PatchApi {
   isTestedPlatform(version: string | undefined): boolean
   describeResult(r: { status: string; file: string; version?: string; tested?: boolean; label?: string; count?: number; error?: unknown }): string
   patchFile(file: string): { status: string; file: string; version?: string; tested?: boolean; label?: string; count?: number }
-  findTargetFiles(startDirs?: string[]): string[]
+  findTargetFiles(startDirs?: string[], configuredHome?: string): string[]
+  patchInstalledTargets(startDirs?: string[], configuredHome?: string):
+    Array<{ status: string; file: string; version?: string; tested?: boolean }>
 }
 
 const patch = require('../patch-context-meter.cjs') as PatchApi
@@ -233,6 +238,95 @@ describe('resolveDshHome', () => {
     expect(patch.expandHomePath('~')).toBe(homedir())
     expect(patch.expandHomePath('/abs/path')).toBe('/abs/path')
   })
+
+  it('prefers an explicit configured home over $DSH_HOME and the default', () => {
+    const configured = join(tmpdir(), 'dsh-cb-configured')
+    const viaEnv = join(tmpdir(), 'dsh-cb-env-loses')
+    expect(patch.resolveDshHome(configured, { DSH_HOME: viaEnv })).toBe(resolve(configured))
+    expect(patch.resolveDshHome(configured, {})).toBe(resolve(configured))
+  })
+
+  it('falls through a blank configured home instead of resolving to the cwd', () => {
+    const viaEnv = join(tmpdir(), 'dsh-cb-env-fallback')
+    const dflt = resolve(join(homedir(), '.dsh'))
+    // The platform's `??` would let an empty `configured` win and land on the
+    // cwd; a patcher that writes into the tree must not.
+    expect(patch.resolveDshHome('   ', { DSH_HOME: viaEnv })).toBe(resolve(viaEnv))
+    expect(patch.resolveDshHome('', { DSH_HOME: viaEnv })).toBe(resolve(viaEnv))
+    expect(patch.resolveDshHome('', {})).toBe(dflt)
+  })
+
+  it('expands a leading ~ in the configured home too', () => {
+    expect(patch.resolveDshHome('~/configured-dsh', {})).toBe(resolve(join(homedir(), 'configured-dsh')))
+    expect(patch.resolveDshHome('~', {})).toBe(resolve(homedir()))
+  })
+
+  it('defaultDshHome is ~/.dsh', () => {
+    expect(patch.defaultDshHome()).toBe(join(homedir(), '.dsh'))
+  })
+})
+
+describe('dshHomesToProbe', () => {
+  it('puts the configured home first and keeps the $DSH_HOME home too', () => {
+    const configured = join(tmpdir(), 'dsh-cb-probe-configured')
+    const viaEnv = join(tmpdir(), 'dsh-cb-probe-env')
+    expect(patch.dshHomesToProbe(configured, { DSH_HOME: viaEnv }))
+      .toEqual([resolve(configured), resolve(viaEnv)])
+  })
+
+  it('collapses to a single home when nothing overrides it', () => {
+    const viaEnv = join(tmpdir(), 'dsh-cb-probe-same')
+    expect(patch.dshHomesToProbe(viaEnv, { DSH_HOME: viaEnv })).toEqual([resolve(viaEnv)])
+    expect(patch.dshHomesToProbe(undefined, {})).toEqual([resolve(join(homedir(), '.dsh'))])
+    expect(patch.dshHomesToProbe('   ', { DSH_HOME: viaEnv })).toEqual([resolve(viaEnv)])
+  })
+})
+
+describe('patchInstalledTargets with an explicit configured home', () => {
+  it('patches the configured-home target without dropping the $DSH_HOME one', () => {
+    const configuredRoot = mkdtempSync(join(tmpdir(), 'dsh-cb-patch-cfg-'))
+    const envRoot = mkdtempSync(join(tmpdir(), 'dsh-cb-patch-env-'))
+    const rel = join('profiles', 'web', 'node_modules', '@deepseek-ai', 'dsh-client-ui-conversation', 'lib', 'client.js')
+    const configuredTarget = join(configuredRoot, rel)
+    const envTarget = join(envRoot, rel)
+    const prev = process.env.DSH_HOME
+    try {
+      mkdirSync(join(configuredTarget, '..'), { recursive: true })
+      writeFileSync(configuredTarget, pristineSource())
+      mkdirSync(join(envTarget, '..'), { recursive: true })
+      writeFileSync(envTarget, pristineSource())
+      process.env.DSH_HOME = envRoot
+      const statuses = new Map(
+        patch.patchInstalledTargets([], configuredRoot).map(r => [realpathSync(r.file), r.status]),
+      )
+      expect(statuses.get(realpathSync(configuredTarget))).toBe('patched')
+      expect(statuses.get(realpathSync(envTarget))).toBe('patched')
+      expect(readFileSync(configuredTarget, 'utf8')).toContain(patch.PATCHED_MARKER)
+    } finally {
+      if (prev === undefined) delete process.env.DSH_HOME
+      else process.env.DSH_HOME = prev
+      rmSync(configuredRoot, { recursive: true, force: true })
+      rmSync(envRoot, { recursive: true, force: true })
+    }
+  })
+})
+
+describe('parseCliArgs', () => {
+  it('reads --dsh-home in both the spaced and the = form', () => {
+    expect(patch.parseCliArgs(['--dsh-home', 'D:\\AppData\\DSH']))
+      .toEqual({ configuredHome: 'D:\\AppData\\DSH' })
+    expect(patch.parseCliArgs(['--dsh-home=D:/AppData/DSH']))
+      .toEqual({ configuredHome: 'D:/AppData/DSH' })
+    expect(patch.parseCliArgs(['--other', '--dsh-home', '/x/y']))
+      .toEqual({ configuredHome: '/x/y' })
+  })
+
+  it('ignores an absent or empty --dsh-home so $DSH_HOME still decides', () => {
+    expect(patch.parseCliArgs([])).toEqual({})
+    expect(patch.parseCliArgs(['--dsh-home'])).toEqual({})
+    expect(patch.parseCliArgs(['--dsh-home='])).toEqual({})
+    expect(patch.parseCliArgs(['--dsh-home', '   '])).toEqual({})
+  })
 })
 
 describe('findTargetFiles', () => {
@@ -269,6 +363,34 @@ describe('findTargetFiles', () => {
       if (prev === undefined) delete process.env.DSH_HOME
       else process.env.DSH_HOME = prev
       rmSync(root, { recursive: true, force: true })
+    }
+  })
+
+  it('finds the bundle under an explicit configured home that differs from $DSH_HOME', () => {
+    // The platform takes an explicit `config.dshHome` on top of $DSH_HOME,
+    // so the two can point at different roots. Discovery must follow the
+    // explicit home AND keep the $DSH_HOME install — the override never
+    // narrows the probe.
+    const configuredRoot = mkdtempSync(join(tmpdir(), 'dsh-cb-cfghome-'))
+    const envRoot = mkdtempSync(join(tmpdir(), 'dsh-cb-envhome-'))
+    const rel = join('profiles', 'web', 'node_modules', '@deepseek-ai', 'dsh-client-ui-conversation', 'lib', 'client.js')
+    const configuredTarget = join(configuredRoot, rel)
+    const envTarget = join(envRoot, rel)
+    const prev = process.env.DSH_HOME
+    try {
+      mkdirSync(join(configuredTarget, '..'), { recursive: true })
+      writeFileSync(configuredTarget, '')
+      mkdirSync(join(envTarget, '..'), { recursive: true })
+      writeFileSync(envTarget, '')
+      process.env.DSH_HOME = envRoot
+      const found = patch.findTargetFiles([], configuredRoot)
+      expect(found).toContain(realpathSync(configuredTarget))
+      expect(found).toContain(realpathSync(envTarget))
+    } finally {
+      if (prev === undefined) delete process.env.DSH_HOME
+      else process.env.DSH_HOME = prev
+      rmSync(configuredRoot, { recursive: true, force: true })
+      rmSync(envRoot, { recursive: true, force: true })
     }
   })
 

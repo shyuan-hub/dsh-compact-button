@@ -165,24 +165,75 @@ function expandHomePath(p) {
   return p;
 }
 
+/** The default harness home when nothing overrides it: `~/.dsh`.
+ *  @returns the un-resolved default home path.
+ */
+function defaultDshHome() {
+  return path.join(os.homedir(), '.dsh');
+}
+
+/** A home override counts as set only when it is a non-blank string; a
+ *  missing, non-string, empty or whitespace-only value counts as unset.
+ *  @param value - the raw override value.
+ *  @returns the value when usable, `undefined` otherwise.
+ */
+function usableHome(value) {
+  return typeof value === 'string' && value.trim().length > 0 ? value : undefined;
+}
+
 /**
  * Resolve the effective DSH harness home, mirroring the platform's
- * `resolveDshHome` precedence: a non-blank `$DSH_HOME` wins, otherwise the
- * default `~/.dsh`. A whitespace-only `$DSH_HOME` counts as unset, so a
- * blank override never relocates the home. The result is absolute.
+ * `resolveDshHome(configured, env)` precedence, highest first:
+ *   1. `configured` — the explicit harness-home override (what the
+ *      platform passes down as `config.dshHome` to its home-aware
+ *      services, and what this package's CLI takes as `--dsh-home`),
+ *   2. a non-blank `$DSH_HOME`,
+ *   3. the default `~/.dsh`.
+ * A leading `~` is expanded on either override, and the result is
+ * absolute. A blank/whitespace-only override of *either* kind counts as
+ * unset — one deliberate divergence from the platform, which uses `??` and
+ * would let an empty `configured` resolve the home to the cwd; for a
+ * patcher that writes into the tree it is safer to fall through than to
+ * start probing the current directory.
  *
  * This is what lets the plugin follow a user who moved their harness home
  * (e.g. `DSH_HOME=D:\AppData\DSH`): probing only `os.homedir()/.dsh` would
  * miss the relocated `profiles` tree and the buttons would never render.
+ * @param configured - explicit harness-home override (highest precedence).
+ *   For backwards compatibility an object here is read as `env`.
  * @param env - environment mapping to read `DSH_HOME` from (default: process.env).
  * @returns the normalized absolute harness home path.
  */
-function resolveDshHome(env) {
+function resolveDshHome(configured, env) {
+  if (configured !== null && typeof configured === 'object') {
+    env = configured;
+    configured = undefined;
+  }
   const fromEnv = (env || process.env)[DSH_HOME_ENV];
-  const home = fromEnv !== undefined && fromEnv.trim().length > 0
-    ? fromEnv
-    : path.join(os.homedir(), '.dsh');
+  const home = usableHome(configured) !== undefined ? configured
+    : usableHome(fromEnv) !== undefined ? fromEnv
+      : defaultDshHome();
   return path.resolve(expandHomePath(home));
+}
+
+/**
+ * The harness homes worth probing, in precedence order, de-duplicated.
+ *
+ * The platform resolves its *profiles* tree from `$DSH_HOME`/default while
+ * `config.dshHome` is a per-service override, so the two can legitimately
+ * point at different roots in one deployment. Narrowing the probe to the
+ * explicit home alone would then lose the `$DSH_HOME` install that issue #4
+ * was about — so discovery unions both, and the explicit home merely comes
+ * first. Patching is idempotent, so an overlapping pair costs nothing.
+ * @param configured - explicit harness-home override.
+ * @param env - environment mapping to read `DSH_HOME` from (default: process.env).
+ * @returns one or two distinct absolute home paths.
+ */
+function dshHomesToProbe(configured, env) {
+  const homes = [resolveDshHome(configured, env)];
+  const fromEnv = resolveDshHome(undefined, env);
+  if (!homes.includes(fromEnv)) homes.push(fromEnv);
+  return homes;
 }
 
 /**
@@ -192,16 +243,19 @@ function resolveDshHome(env) {
  * 1. climb from each start directory and probe `<dir>/<TARGET_REL>` —
  *    covers the plugin sitting in a profile workspace next to (or above)
  *    the platform packages, npm flat layouts and pnpm .pnpm nests alike;
- * 2. probe the harness profile roots `<dshHome>/profiles` and
- *    `<dshHome>/profiles/<name>` (where `<dshHome>` honors `$DSH_HOME`,
- *    falling back to `~/.dsh`) — covers the host-half self-heal, where the
- *    process cwd and the plugin's on-disk home tell us nothing.
+ * 2. probe the harness profile roots `<home>/profiles` and
+ *    `<home>/profiles/<name>` for every home from {@link dshHomesToProbe}
+ *    (explicit override, `$DSH_HOME`, then `~/.dsh`) — covers the
+ *    host-half self-heal, where the process cwd and the plugin's on-disk
+ *    home tell us nothing.
  *
  * Symlinks are resolved so a pnpm/npm link writes the real store file.
  * @param startDirs - directories to climb from (default: cwd).
+ * @param configuredHome - explicit harness-home override forwarded to the
+ *   standard-root probe (highest precedence there too).
  * @returns existing target file paths (may be empty).
  */
-function findTargetFiles(startDirs) {
+function findTargetFiles(startDirs, configuredHome) {
   const probes = [];
   const climbFrom = [...(startDirs && startDirs.length > 0 ? startDirs : [process.cwd()])];
   for (const start of climbFrom) {
@@ -213,16 +267,18 @@ function findTargetFiles(startDirs) {
       dir = parent;
     }
   }
-  const profilesRoot = path.join(resolveDshHome(), 'profiles');
-  probes.push(path.join(profilesRoot, TARGET_REL));
-  let names = [];
-  try {
-    names = fs.readdirSync(profilesRoot);
-  } catch {
-    /* no <dshHome>/profiles — standard roots simply yield nothing */
-  }
-  for (const name of names) {
-    probes.push(path.join(profilesRoot, name, TARGET_REL));
+  for (const home of dshHomesToProbe(configuredHome)) {
+    const profilesRoot = path.join(home, 'profiles');
+    probes.push(path.join(profilesRoot, TARGET_REL));
+    let names = [];
+    try {
+      names = fs.readdirSync(profilesRoot);
+    } catch {
+      /* no <home>/profiles — that standard root simply yields nothing */
+    }
+    for (const name of names) {
+      probes.push(path.join(profilesRoot, name, TARGET_REL));
+    }
   }
   const seen = new Set();
   const found = [];
@@ -288,10 +344,30 @@ function patchFile(file) {
 /**
  * Discover and patch every installed target.
  * @param startDirs - climb origins forwarded to findTargetFiles.
+ * @param configuredHome - explicit harness-home override (highest home
+ *   precedence; the `$DSH_HOME` home is still probed as well).
  * @returns one result per discovered target file.
  */
-function patchInstalledTargets(startDirs) {
-  return findTargetFiles(startDirs).map(patchFile);
+function patchInstalledTargets(startDirs, configuredHome) {
+  return findTargetFiles(startDirs, configuredHome).map(patchFile);
+}
+
+/**
+ * Parse the flags the manual CLI understands.
+ * @param argv - argument list (typically `process.argv.slice(2)`).
+ * @returns `{ configuredHome }` — the `--dsh-home <path>` / `--dsh-home=<path>`
+ *   value, or `undefined` when the flag is absent.
+ */
+function parseCliArgs(argv) {
+  const args = Array.isArray(argv) ? argv : [];
+  const FLAG = '--dsh-home';
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    const value = arg === FLAG ? args[i + 1]
+      : arg.startsWith(`${FLAG}=`) ? arg.slice(FLAG.length + 1) : undefined;
+    if (usableHome(value)) return { configuredHome: value };
+  }
+  return {};
 }
 
 /**
@@ -318,12 +394,16 @@ function describeResult(r) {
  * documented behavior for an absent slot) and must not break the run.
  * @param startDirs - climb origins (defaults to this script's directory
  *   plus cwd, which for an installed plugin package locate the profile).
+ * @param options - `{ configuredHome }`: explicit harness home to probe
+ *   first, on top of `$DSH_HOME` and `~/.dsh`.
  */
-function main(startDirs) {
+function main(startDirs, options) {
   const origins = startDirs && startDirs.length > 0 ? startDirs : [__dirname, process.cwd()];
-  const results = patchInstalledTargets(origins);
+  const configuredHome = options && options.configuredHome;
+  const results = patchInstalledTargets(origins, configuredHome);
   if (results.length === 0) {
     console.warn('[dsh-compact-button patch] no @deepseek-ai/dsh-client-ui-conversation install found; the context-meter buttons will not render until it is present');
+    console.warn(`[dsh-compact-button patch] homes probed: ${dshHomesToProbe(configuredHome).join(', ')} — point at a relocated harness with --dsh-home <path> or $${DSH_HOME_ENV}`);
     return;
   }
   for (const r of results) {
@@ -338,8 +418,11 @@ module.exports = {
   PATCHED_MARKER,
   TESTED_PLATFORMS,
   DSH_HOME_ENV,
+  defaultDshHome,
   expandHomePath,
   resolveDshHome,
+  dshHomesToProbe,
+  parseCliArgs,
   patchSource,
   countMatches,
   detectPlatformVersion,
