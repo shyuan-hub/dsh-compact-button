@@ -1,4 +1,5 @@
 /**
+/**
  * Manual CLI entry for the platform patch — run it as
  * `node node_modules/dsh-compact-button/patch-run.cjs` to patch ahead of
  * the next dsh start (the host half self-heals on every start anyway; the
@@ -6,7 +7,14 @@
  * warn about it). Kept apart from patch-context-meter.cjs so that module
  * stays a pure, side-effect-free import when the host half (lib/index.js)
  * bundles it.
+ *
+ * Flags:
+ *   --dsh-home <path>   explicit harness home to probe first, on top of
+ *                       $DSH_HOME and ~/.dsh (both are still probed).
+ *                       e.g. --dsh-home D:\AppData\DSH
  */
 'use strict';
 
-require('./patch-context-meter.cjs').main();
+const meter = require('./patch-context-meter.cjs');
+
+meter.main(undefined, meter.parseCliArgs(process.argv.slice(2)));
