@@ -50,7 +50,7 @@ export function NewSessionButton({ newSession, t }: NewSessionButtonProps) {
   const [locked, setLocked] = useState(false)
   const lockTimer = useRef<number | null>(null)
 
-  // Clear the lockout on unmount (HMR / panel close).
+  // Clear the lockout on unmount (HMR / slot teardown).
   useEffect(() => () => {
     if (lockTimer.current !== null) window.clearTimeout(lockTimer.current)
   }, [])

@@ -59,7 +59,7 @@ export function CompactButton({ compact, t }: CompactButtonProps) {
   const [phase, setPhase] = useState<Phase>('idle')
   const resetTimer = useRef<number | null>(null)
 
-  // Clear the pending reset on unmount (HMR / panel close).
+  // Clear the pending reset on unmount (HMR / slot teardown).
   useEffect(() => () => {
     if (resetTimer.current !== null) window.clearTimeout(resetTimer.current)
   }, [])
