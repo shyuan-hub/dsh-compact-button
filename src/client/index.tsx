@@ -1,8 +1,8 @@
 /**
- * Client half of dsh-compact-button: registers an action row into the
- * conversation context meter panel's actions slot (`conversation.context.actions`,
- * declared as a child of `conversation.composer.bar` by the platform's
- * ui-conversation ContextMeter). The row holds two buttons:
+ * Client half of dsh-compact-button: registers an icon row into the
+ * composer dock (`conversation.composer.dock`) — an official `list` slot
+ * the platform's ui-conversation bundle declares and renders in the same
+ * centered flex row as the ContextMeter ring. The row holds two icons:
  * - Compact: one click submits `/compact` to this seat's session through the
  *   existing command seam — the same path a typed `/compact` takes — so
  *   admission, locking, durability and the command row in the chat all stay
@@ -11,6 +11,11 @@
  *   fresh Session in the current Session's Workspace and navigate to it, so
  *   the new Session shares the previous one's Workspace and inherits the same
  *   deployment-level agent preset and permission policy.
+ *
+ * Both icons are icon-only and carry their label through the platform
+ * `Tooltip`, matching the ring's own trigger — which is also why this plugin
+ * needs no modification of platform code: the dock is a supported extension
+ * point rather than a slot we had to inject ourselves.
  *
  * Services: slots (slot registration), sessions (scoped session command
  * submission), uiWorkspace (new-session action), locale (dictionary
@@ -44,18 +49,24 @@ export function apply(ctx: Context): void {
     },
     'dsh-compact-button: dictionaries',
   )
-  // The context meter panel's actions slot: slots.inject waits for the
+  // The composer dock row: an officially declared list slot that the
+  // platform renders in the same flex row as the ContextMeter ring
+  // (`InputBar` renders `renderSlot("conversation.composer.dock", {})`
+  // immediately before `<ContextMeter/>`). slots.inject waits for the
   // platform's declaration (the ui-conversation entry must be on the ledger
   // first — registering directly would race it), then registers the button.
   // The disposer unregisters on fiber disposal (HMR-safe).
   ctx.effect(
     () =>
-      ctx.slots.inject('conversation.context.actions', () =>
+      ctx.slots.inject('conversation.composer.dock', () =>
         ctx.slots.register(
           {
             // List slots require a unique instance id (registry contract).
             id: 'dsh-compact-button:context-actions',
-            name: 'conversation.context.actions',
+            name: 'conversation.composer.dock',
+            // Sit after the official `stats` pill (order 0) that
+            // dsh-client-ui-chat registers into the same row.
+            order: 1,
             locale: LOCALE_NS,
             registrant: 'dsh-compact-button',
             inject: (sessionId) => ({

@@ -25,19 +25,36 @@ describe('dictionaries', () => {
       expect(en[key as keyof typeof en]).toBeTruthy()
     }
   })
+
+  it('contains exactly the keys the components read — no dead copy', () => {
+    // CompactButton reads the five PHASE_KEY entries (label / pending /
+    // submitted / rejected / failed) for both its Tooltip bubble and its
+    // aria-label; NewSessionButton reads `newSession`. A key outside this
+    // set is dead copy — delete it instead of leaving it registered under
+    // the namespace. (The icon-only redesign left `tooltip` and
+    // `newSessionTooltip` unread; this pins the set so that cannot recur.)
+    expect(Object.keys(zh).sort()).toEqual([
+      'failed',
+      'label',
+      'newSession',
+      'pending',
+      'rejected',
+      'submitted',
+    ])
+  })
 })
 
 describe('t (browser language fallback)', () => {
   it('returns Chinese copy for zh languages', () => {
     vi.stubGlobal('navigator', { language: 'zh-CN' })
     expect(t('label')).toBe(zh.label)
-    expect(t('tooltip')).toBe(zh.tooltip)
+    expect(t('newSession')).toBe(zh.newSession)
   })
 
   it('returns English copy for non-zh languages', () => {
     vi.stubGlobal('navigator', { language: 'en-US' })
     expect(t('label')).toBe(en.label)
-    expect(t('tooltip')).toBe(en.tooltip)
+    expect(t('newSession')).toBe(en.newSession)
   })
 
   it('is case-insensitive on the language tag', () => {

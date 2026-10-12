@@ -32,16 +32,16 @@ afterEach(() => {
 describe('idle', () => {
   it('renders the fallback (browser-language) label and tooltip', async () => {
     const button = await renderButton(() => {})
-    expect(button).toHaveTextContent(en.newSession)
-    expect(button).toHaveAttribute('title', en.newSessionTooltip)
+    expect(button).toHaveAttribute('aria-label', en.newSession)
+    expect(button).toHaveAttribute('title', en.newSession)
     expect(button).not.toBeDisabled()
   })
 
   it('prefers the framework t prop over the fallback', async () => {
     const t = (key: string) => `[${key}]`
     const button = await renderButton(() => {}, t)
-    expect(button).toHaveTextContent('[newSession]')
-    expect(button).toHaveAttribute('title', '[newSessionTooltip]')
+    expect(button).toHaveAttribute('aria-label', '[newSession]')
+    expect(button).toHaveAttribute('title', '[newSession]')
   })
 })
 
