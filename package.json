@@ -1,6 +1,6 @@
 {
   "name": "dsh-compact-button",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "DSH web plugin: adds two icon buttons to the official dock row below the conversation composer, right next to the context ring. Compact submits /compact to summarize older history; New Session starts a fresh session in the same workspace (agent preset and permission settings follow the deployment default).",
   "type": "module",
   "publishConfig": {

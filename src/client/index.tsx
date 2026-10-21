@@ -64,9 +64,11 @@ export function apply(ctx: Context): void {
             // List slots require a unique instance id (registry contract).
             id: 'dsh-compact-button:context-actions',
             name: 'conversation.composer.dock',
-            // Sit after the official `stats` pill (order 0) that
-            // dsh-client-ui-chat registers into the same row.
-            order: 1,
+            // Sit after every pill the platform registers into this row.
+            // dsh-client-ui-chat ships `activity` (order 0) and `usage`
+            // (order 1) as of platform 0.2.1-rc.2 — a low number here would
+            // tie with an official pill, so 10 leaves headroom for more.
+            order: 10,
             locale: LOCALE_NS,
             registrant: 'dsh-compact-button',
             inject: (sessionId) => ({

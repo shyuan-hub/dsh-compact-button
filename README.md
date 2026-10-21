@@ -128,8 +128,8 @@ dsh plugin --profile web add "file:<你的本地目录>/dsh-compact-button-<版�
 
 ## 🔧 工作原理
 
-- **平台扩展点**：`@deepseek-ai/dsh-client-ui-conversation` 自己声明并渲染 `conversation.composer.dock`——一个 `list` 型官方槽位，位于 composer 下方与 `ContextMeter` 圆环同一行的居中 flex 容器（`justify-content:center`、`gap:12px`）。官方 `dsh-client-ui-chat` 的 `stats` 药丸就注册在这里。
-- **client 半边**：通过 `slots.inject` 等待槽位声明后，把一个并排容器（`ContextActionRow`）以 `order: 1` 注册进去，排在官方 `stats`（`order: 0`）之后。容器内左为 `CompactButton`、右为 `NewSessionButton`：
+- **平台扩展点**：`@deepseek-ai/dsh-client-ui-conversation` 自己声明并渲染 `conversation.composer.dock`——一个 `list` 型官方槽位，位于 composer 下方与 `ContextMeter` 圆环同一行的居中 flex 容器（`justify-content:center`、`gap:12px`）。官方 `dsh-client-ui-chat` 的 `activity`、`usage` 药丸就注册在这里。
+- **client 半边**：通过 `slots.inject` 等待槽位声明后，把一个并排容器（`ContextActionRow`）以 `order: 10` 注册进去，排在官方药丸（`activity` `order: 0`、`usage` `order: 1`）之后。容器内左为 `CompactButton`、右为 `NewSessionButton`：
   - `CompactButton` 点击调用 `session.command('/compact')`——与手敲 `/compact` 完全同一条通道（接纳语义由 Host 的 command-compact 插件拥有，压缩结果以命令行形式出现在对话流中）。
   - `NewSessionButton` 点击调用 `uiWorkspace.startSession()`——在当前会话所在 workspace 中开启新会话并跳转；点击后约 1.5 秒内锁定防止误连点。
   - 两个图标都用平台的 `Tooltip` primitive（`side="top"`、`delayMs={200}`），与上下文圆环的触发器行为一致。
@@ -166,7 +166,7 @@ pnpm watch        # tsdown --watch
 ## ⚠️ 已知限制
 
 - 依赖官方槽位 `conversation.composer.dock`：由平台声明与渲染。若上游把这个槽位移除或改语义，图标会停止渲染（`slots.inject` 等不到声明，静默降级）
-- dock 行是居中 flex 容器，已有官方 `stats` 药丸占用 `order: 0`；本插件用 `order: 1` 排在其后。若将来有更多占用者，视觉顺序可能需要再调
+- dock 行是居中 flex 容器，官方 `dsh-client-ui-chat` 已占用 `order: 0`（`activity`）与 `order: 1`（`usage`）；本插件用 `order: 10` 排在它们之后，给后续官方条目留了空位，不必再为新增占用者改版本号
 - 压缩按钮只负责提交 `/compact`，压缩的接纳与执行语义由 Host 侧 command-compact 插件拥有
 - 状态提示 4 秒后自动复位，不提供压缩进度展示
 - 新建会话按钮在同一 workspace 中开启新会话，但**沿用部署默认的 agent 预设与权限设置**；若当前会话用的是非默认预设，新会话不会自动沿用（client 侧 `uiWorkspace.startSession` 不暴露预设/权限选择）

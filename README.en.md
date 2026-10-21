@@ -128,8 +128,8 @@ Clicking starts a new session in **the current session's workspace** and navigat
 
 ## 🔧 How it works
 
-- **Platform extension point**: `@deepseek-ai/dsh-client-ui-conversation` declares and renders `conversation.composer.dock` itself — a `list`-kind official slot, a centered flex container in the row below the composer sharing the line with `ContextMeter` (`justify-content:center`, `gap:12px`). The official `dsh-client-ui-chat` stats pill registers here too.
-- **Client half**: uses `slots.inject` to wait for the declaration, then registers a side-by-side container (`ContextActionRow`) at `order: 1`, after the official `stats` (`order: 0`). Inside it, `CompactButton` on the left and `NewSessionButton` on the right:
+- **Platform extension point**: `@deepseek-ai/dsh-client-ui-conversation` declares and renders `conversation.composer.dock` itself — a `list`-kind official slot, a centered flex container in the row below the composer sharing the line with `ContextMeter` (`justify-content:center`, `gap:12px`). The official `dsh-client-ui-chat` `activity` and `usage` pills register here too.
+- **Client half**: uses `slots.inject` to wait for the declaration, then registers a side-by-side container (`ContextActionRow`) at `order: 10`, after the official pills (`activity` at `order: 0`, `usage` at `order: 1`). Inside it, `CompactButton` on the left and `NewSessionButton` on the right:
   - `CompactButton` calls `session.command('/compact')` — the same channel as a typed `/compact` (admission semantics belong to the Host's command-compact plugin; the result renders as a command row in the chat).
   - `NewSessionButton` calls `uiWorkspace.startSession()` — opens a new session in the current session's workspace and navigates to it; locks for ~1.5s against double-clicks.
   - Both icons use the platform `Tooltip` primitive (`side="top"`, `delayMs={200}`), matching the context ring's trigger behaviour.
@@ -166,7 +166,7 @@ pnpm watch        # tsdown --watch
 ## ⚠️ Known limitations
 
 - Depends on the official `conversation.composer.dock` slot, which the platform declares and renders. If upstream removes it or changes its semantics, the icons stop rendering (`slots.inject` never resolves; silent degradation).
-- The dock is a centered flex row already occupied by the official `stats` pill at `order: 0`; this plugin uses `order: 1` to sit after it. If more occupants arrive, the visual order may need retuning.
+- The dock is a centered flex row; the official `dsh-client-ui-chat` already occupies `order: 0` (`activity`) and `order: 1` (`usage`). This plugin uses `order: 10` to sit after them, leaving headroom so new official occupants need no change here.
 - The compact button only submits `/compact`; admission and execution semantics belong to the Host-side command-compact plugin.
 - The state hint resets after 4 seconds; no compaction progress is shown.
 - The new-session button opens a session in the same workspace but **uses the deployment's default agent preset and permission settings**; a non-default preset on the current session is not inherited (client-side `uiWorkspace.startSession` exposes no preset/permission selection).
