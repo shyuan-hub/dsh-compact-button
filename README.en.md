@@ -133,6 +133,7 @@ Clicking starts a new session in **the current session's workspace** and navigat
   - `CompactButton` calls `session.command('/compact')` — the same channel as a typed `/compact` (admission semantics belong to the Host's command-compact plugin; the result renders as a command row in the chat).
   - `NewSessionButton` calls `uiWorkspace.startSession()` — opens a new session in the current session's workspace and navigates to it; locks for ~1.5s against double-clicks.
   - Both icons use the platform `Tooltip` primitive (`side="top"`, `delayMs={200}`), matching the context ring's trigger behaviour.
+- **Visibility**: the whole row returns `null` until the session has model activity, on the same criterion as the official pills (`sessionStats.steps === 0`; falls back to `tokenUsage` when `dsh-session-stats` is not composed). On a blank session there is no history to compact and the current session already is the new one.
 - **Host half**: **inert**. `apply()` is an empty implementation, called once because `cordis.patch.yml` mounts the module onto the Node tree. The feature lives entirely client-side; there is nothing to do on the Node side.
 - **i18n**: dictionaries register under the `compactButton` namespace (zh/en) and follow the DSH locale live.
 

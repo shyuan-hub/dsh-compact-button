@@ -133,6 +133,7 @@ dsh plugin --profile web add "file:<你的本地目录>/dsh-compact-button-<版�
   - `CompactButton` 点击调用 `session.command('/compact')`——与手敲 `/compact` 完全同一条通道（接纳语义由 Host 的 command-compact 插件拥有，压缩结果以命令行形式出现在对话流中）。
   - `NewSessionButton` 点击调用 `uiWorkspace.startSession()`——在当前会话所在 workspace 中开启新会话并跳转；点击后约 1.5 秒内锁定防止误连点。
   - 两个图标都用平台的 `Tooltip` primitive（`side="top"`、`delayMs={200}`），与上下文圆环的触发器行为一致。
+- **可见性**：整行在会话产生模型活动之前返回 `null`，与官方药丸共用同一判据（`sessionStats.steps === 0`；`dsh-session-stats` 未装配时退回 `tokenUsage`）。空白会话上既没有历史可压缩、当前会话本身也就是新会话，两个按钮都还没有可作用的对象。
 - **Host 半边**：**惰性**。`apply()` 是空实现，只在 `cordis.patch.yml` 把本模块挂上 Node 树时被调用一次。功能完全在 client 侧，Node 侧无事可做。
 - **i18n**：字典注册在 `compactButton` 命名空间（zh/en），跟随 DSH 语言设置实时切换。
 
