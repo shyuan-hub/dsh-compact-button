@@ -74,7 +74,8 @@ export interface ClientSlots {
       /** Chain/entry shadowing rank (see the platform slot registry). */
       priority?: number
       /** List display order — ascending, default 0. This is what places us
-       *  after dsh-client-ui-chat's `stats` pill in the composer dock. */
+       *  after the dsh-client-ui-chat pills (`activity` 0, `usage` 1) in the
+       *  composer dock. */
       order?: number
       registrant?: string
       inject?: (sessionId: string | undefined) => Record<string, unknown>

@@ -157,8 +157,9 @@ describe('client apply', () => {
     const options = registered[0]?.options
     expect(options?.id).toBe('dsh-compact-button:context-actions')
     expect(options?.name).toBe('conversation.composer.dock')
-    // Ordered after dsh-client-ui-chat's `stats` pill in the same dock row.
-    expect(options?.order).toBe(1)
+    // Ordered after every dsh-client-ui-chat pill in the same dock row
+    // (`activity` order 0, `usage` order 1 as of platform 0.2.1-rc.2).
+    expect(options?.order).toBe(10)
     expect(options?.locale).toBe(LOCALE_NS)
     expect(options?.registrant).toBe('dsh-compact-button')
     expect(typeof options?.inject).toBe('function')
