@@ -9,7 +9,11 @@
  * (the connect/open RPCs run fire-and-forget inside the service), so the
  * button only guards against a rapid double-click with a short lockout
  * rather than a phase machine. With no text on the glyph, the platform
- * Tooltip carries the “新建会话” label.
+ * Tooltip carries the “新建会话” label. That Tooltip portals its bubble
+ * (`portal`): the slot contract for `conversation.composer.dock` says fixed
+ * overlays contributed there must leave the composer subtree, which clips
+ * them — the platform's own dock members (ContextMeter, the stat pills) do
+ * the same, and without it the bubble simply never appears.
  */
 import { Tooltip } from '@deepseek-ai/dsh-client-ui-primitives'
 import { useEffect, useRef, useState } from 'react'
@@ -70,7 +74,7 @@ export function NewSessionButton({ newSession, t }: NewSessionButtonProps) {
   const label = copy('newSession')
 
   return (
-    <Tooltip label={label} side="top" delayMs={200}>
+    <Tooltip label={label} side="top" delayMs={200} portal>
       <button
         type="button"
         className={css.iconButton}

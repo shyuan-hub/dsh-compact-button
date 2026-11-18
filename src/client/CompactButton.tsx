@@ -7,7 +7,10 @@
  * button carries no text, the phase machine drives two channels instead: the
  * platform Tooltip label (idle reads “压缩上下文”, settled phases report
  * the outcome) and the glyph colour. Hovering at any time tells you both
- * what the button does and what the last click did.
+ * what the button does and what the last click did. The bubble portals
+ * (`portal`) because the composer dock clips fixed overlays contributed
+ * inside it — the platform's own dock members do the same; without it the
+ * bubble is invisible.
  */
 import { Tooltip } from '@deepseek-ai/dsh-client-ui-primitives'
 import { useEffect, useRef, useState } from 'react'
@@ -99,7 +102,7 @@ export function CompactButton({ compact, t }: CompactButtonProps) {
     : ''
 
   return (
-    <Tooltip label={label} side="top" delayMs={200}>
+    <Tooltip label={label} side="top" delayMs={200} portal>
       <button
         type="button"
         className={`${css.iconButton} ${modifier}`.trim()}

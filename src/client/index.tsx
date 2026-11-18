@@ -15,7 +15,9 @@
  * Both icons are icon-only and carry their label through the platform
  * `Tooltip`, matching the ring's own trigger — which is also why this plugin
  * needs no modification of platform code: the dock is a supported extension
- * point rather than a slot we had to inject ourselves.
+ * point rather than a slot we had to inject ourselves. Each `Tooltip` passes
+ * `portal`, as the slot contract requires for this dock: the docked composer
+ * clips fixed overlays, so a non-portaled bubble never shows.
  *
  * Services: slots (slot registration), sessions (scoped session command
  * submission), uiWorkspace (new-session action), locale (dictionary
